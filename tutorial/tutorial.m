@@ -1,15 +1,16 @@
-% % Tutorial
+%% MetPath Tutorial Start
 
+% Not necessary to run clear all but can help clarity to begin 
+% with an empty Workspace
 clear all
 
 %% Set up paths
 
-% MetPath uses functions from Cobra Toolbox package
+% MetPath uses functions from COBRA Toolbox package
 % (https://opencobra.github.io/cobratoolbox/stable/).
 % Its installation is mandatory.
-%If you have not yet run initCobraToolbox, do so here (otherwise skip)
+% If you have not yet run initCobraToolbox, do so here (otherwise skip)
 run initCobraToolbox
-
 
 %% Set current directory
 
@@ -19,15 +20,17 @@ cd('C:\MetPath')
 %% Load tutorial variables
 
 % In order to use MetPath toolbox we need:
-% - a struct object (named fc in supplemented files) with (1)expression
-% data (double) of condition 1, (2) expression data (double) of condition 2,
-% (3) gene names.
-
-% - working models (named model_ana and model_std in supplemented files)
-% where the Ex rxns reflect the growing conditions.
-
+% - a struct object (named exprData) with 
+% (1) exprData.aerobic - expression data (double) of condition 1,
+% (2) exprData.anaerobic - expression data (double) of condition 2,
+% (3) exprData.genes - gene names.
+% modelAna - iJO1366 with exchange reactions set to anaerobic growth on glc
+% modelStd - iJO1366 with exchange reactions set to aerobic growth on glc
 load('data\tutorial_data\tutorialStart');
-load('data\cucoPairs');
+
+% We also need currency and cofactor pairs to use in the tiered pathway
+% definition.
+load('data\curCofPairs');
 
 %% Set up solvers
 
@@ -40,45 +43,55 @@ changeCobraSolver('gurobi6','MILP');
 
 %%
 
-% for anaerobic condition convert the model to be handled by the toolbox, define the flux state and generate modelMets struct object necessary for the next steps with:
+% for anaerobic condition convert the model to be handled by the toolbox, 
+% define the flux state and generate modelMets struct object necessary for 
+% the next steps with:
 
 %THIS IS STILL BROKEN WHEN IT ACTUALLY FINDS BIOMASS ENTRIES
-biomass_ind = strmatch('BIOMASS',model_std.rxns);
-biomass_ind = [];
+biomassInd = strmatch('BIOMASS',model_std.rxns);
+biomassInd = [];
 
-[model_ana,modelMets_ana] = defineMets(model_ana, biomass_ind, 2, currencyPairs, cofactorPairs, compartments,1,0);
-%% REMOVE
+allowLoops = 1;
+%THIS WHOLE TUTORIAL COMBINES SNAKE CASE AND CAMEL CASE. PICK ONE BASED ON
+%HOW THE FUNCTIONS ARE CALLED
+%THIS SHOULD TAKE EMPTY BRACE INSTEAD OF 0
+%NEED TO OFFER AN EXPLANATION OF WHAT PROVIDING AN INORGANIC METS LIST DOES
+inorganicMets = 0;
 
-% or with additional options: (FBA with low tollerance, allowing loops
-% and with a user provided list of inorganic metabolites
+% inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3',...
+% 'h2o','co2','co','h2o2','o2s','h2s','etha', 'no','fe3hox','3fe4s',...
+% '4fe4s','2fe2s', 'etoh','mobd','cu','cu2'};
 
+%THIS FUNCTION CURRENTLY REMOVES BIOMASS FROM THE ORIGINAL MODEL VARIABLE
+%WITHOUT RENAMING IT. AWFUL BEHAVIOR
+[modelAnaMod,modelMetsAna] = defineMets(modelAna, biomassInd, 2, ...
+    currencyPairs, cofactorPairs, compartments,allowLoops,inorganicMets);
 
-inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3', 'h2o','co2','co','h2o2','o2s','h2s',...
-    'etha', 'no','fe3hox','3fe4s','4fe4s','2fe2s', 'etoh','mobd','cu','cu2'};
-
-%NEED TO UPDATE THIS LINE WITH THE NEW OPTIONS
-[model_ana,modelMets_ana] = defineMets(model_ana, biomass_ind,2,1,inorganic_mets);
-
+%FIX THIS EXPLANATION TO BE MORE CLEAR
 % % NOTE: biomass index must be provided, in fact, it involves too many
-% % metabolites and otherwise it will be included in several pathways altering results.
-% % you can find biomass_ind by biomass_ind = strmatch('BIOMASS', model_ana.rxns);
-
-%%
+% % metabolites and otherwise it will be included in several pathways 
+% % altering results.you can find biomass_ind by using:
+% % biomassInd = strmatch('BIOMASS', modelAna.rxns);
 
 % map the fold change of genes expression onto active reactions.
-
+%NOT SURE WHAT THIS NOTE IS TALKING ABOUT
+% % NOTE: the first expression data must refer to the model and
+% % condition used for the function
 %THIS IS VERY SLOW
-fMap_ana = mapGenes(model_ana, fc.genes, fc.anaerobic, fc.aerobic);
+%WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
+fMapAna = mapGenes(modelAnaMod, exprData.genes, exprData.anaerobic, exprData.aerobic);
 
-% % NOTE: the first expression data must refers to the used model and
-% % condtion used for the function
+
 
 % extract the pathways and calculate the production scores, degradation
 % scores and the aggregate perturbation scores
+%THIS IS THE FUNCTION THAT HAS ANOTHER OUTPUT FORMAT THAT BREAKS LATER CODE
+%TRY TO REMOVE THIS BEHAVIOR IF POSSIBLE
+%WHAT DOES CRES STAND FOR? THESE NAMES DON"T MAKE SENSE
+[resultsTabAna, cResAna] = metPath(modelAnaMod, modelMetsAna, fMapAna,1,0.05);
 
-[resultsTab_ana, cRes_ana] = metPath(model_ana, modelMets_ana, fMap_ana,1,0.05);
-
-% % NOTE: the cutoffdistance is set to 1 in order to run the tutorial
+%CAN I SPEED IT UP? A DISTANCE OF 2 SHOULDN'T TAKE THAT LONG
+% % NOTE: the cutoff distance is set to 1 in order to run the tutorial
 % % faster. For each metabolite extract the reactions involved in the
 % % production and in its degradation, estimate their weightings and their
 % % levels. The levels are meant as the distance from the reaction directly
@@ -96,7 +109,7 @@ fMap_ana = mapGenes(model_ana, fc.genes, fc.anaerobic, fc.aerobic);
 % to obtain the aggregate perturbation score (APS) in a sorted cell array we can
 % use the following function:
 
-aggregatePerturbationScores = APS(modelMets_ana, cRes_ana);
+aggregatePerturbationScores = APS(modelMetsAna, cResAna);
 
 
 %% Second set of analyses
@@ -110,14 +123,14 @@ aggregatePerturbationScores = APS(modelMets_ana, cRes_ana);
 
 %WHY IS MAP GENES SO SLOW??
 
-[model_std,modelMets_std] = defineMets(model_std, biomass_ind, 2, currencyPairs, cofactorPairs, compartments,1,0);
-fMap_std = mapGenes(model_std, fc.genes, fc.aerobic, fc.anaerobic);
-[resultsTab, cRes_std] = metPath(model_std, modelMets_std, fMap_std, 1, 0.05);
+[modelStdMod,modelMetsStd] = defineMets(modelStd, biomassInd, 2, currencyPairs, cofactorPairs, compartments,1,0);
+fMapStd = mapGenes(modelStdMod, fc.genes, fc.aerobic, fc.anaerobic);
+[resultsTab, cResStd] = metPath(modelStdMod, modelMets_std, fMapStd, 1, 0.05);
 
 
 % Then we can score the subSystems Perturbation by
 
-subSystemsPerturbation = subSystemsScores(model_ana, cRes_ana, modelMets_ana,model_std, cRes_std, modelMets_std);
+subSystemsPerturbation = subSystemsScores(modelAnaMod, cResAna, modelMetsAna,modelStd, cResStd, modelMetsStd);
 
 % this function will predict the overall perturbation of the subSystems in the model
 
@@ -141,11 +154,13 @@ fc.expression2 = fc.aerobic;
 %DOES THIS GENERATE A FILE THEN? WHY IS THE OUTPUT CALLED FILE? IS IT
 %CALLED ANYWHERE ELSE IN THE TUTORIAL? THE OUTPUT IS AN OBNOXIOUS TEXT
 %BLOCK
-file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana,cRes_std,modelMets_std);
+%THIS FUNCTION TAKES exprData IN WHICH HAS ANAEROBIC AND AEROBIC DEFINED
+%SPECIFICALLY - WILL THIS WORK FOR NEW CONDITIONS???
+file = escherPaths('pyr_c', 'b',modelAnaMod,exprData, cResAna,modelMetsAna,cResStd,modelMetsStd);
 
 % alternatively we can study the pathway in a single condition by:
 
-file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana);
+file = escherPaths('pyr_c', 'b',modelAnaMod,exprData, cResAna,modelMetsAna);
 
 % % NOTE: the 'b' stands for 'both' (production and degradation), if we want study just the production or
 % % degradation for a specific metabolite we can use respectvively 'p' or
@@ -155,7 +170,7 @@ file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana);
 % to generate a table with a comparisons in terms of perturbation score and
 % used rxns we can use the comparePaths function:
 
-[commonPaths, diffPaths] = comparePaths(model_ana,model_std,cRes_ana,cRes_std, modelMets_ana,modelMets_std);
+[commonPaths, diffPaths] = comparePaths(modelAnaMod,modelStd,cResAna,cResStd, modelMetsAna,modelMetsStd);
 
 % % NOTE: in this case, since we extracted paths using a distance = 1 they
 % will result exactly the same except for the perturbation score.
@@ -165,13 +180,16 @@ file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana);
 % (in production reactions, degradation reactions and in th whole path)
 
 %THESE LISTS HAVE DUPLICATES
-[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cRes_ana, model_ana, modelMets_ana);
+%ALSO WHAT ARE THESE OUTPUTS? THE NAMES AREN'T CLEAR - PRODUCTION AND
+%DEGRADATION? I THOUGHT WE WERE CALLING THEM PRODUCTION AND CONSUMPTION?
+%CHANGE D TO C AND CHECK IN THE FUNCTION TOO FOR THE SAME NAME
+[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaMod, modelMetsAna);
 
 
 
 
 
-%% universalDB - E. coli
+%% Using the universal pathway database for E. coli
 
 load tutorialUniversalDb
 
