@@ -138,9 +138,6 @@ fc.expression2 = fc.aerobic;
 
 % then we can run the option
 
-%DOES THIS GENERATE A FILE THEN? WHY IS THE OUTPUT CALLED FILE? IS IT
-%CALLED ANYWHERE ELSE IN THE TUTORIAL? THE OUTPUT IS AN OBNOXIOUS TEXT
-%BLOCK
 file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana,cRes_std,modelMets_std);
 
 % alternatively we can study the pathway in a single condition by:
@@ -161,17 +158,16 @@ file = escherPaths('pyr_c', 'b',model_ana,fc, cRes_ana,modelMets_ana);
 % will result exactly the same except for the perturbation score.
 
 
-% findGenesFromPaths:  it retrieves genes involved in a pathway
+% findGenesFromPaths:  it permits to retrieve involved genes in a pathway
 % (in production reactions, degradation reactions and in th whole path)
 
-%THESE LISTS HAVE DUPLICATES
 [Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cRes_ana, model_ana, modelMets_ana);
 
 
 
 
 
-%% universalDB - E. coli
+%% universalDB - E. Coli
 
 load tutorialUniversalDb
 
@@ -263,7 +259,7 @@ listCond = {'acetateaerobicNH4.mat'
 %  after data preparation, we can use universalDb function by means of
 %  ranked genes (data_matched.rank or .standardRank)
 %
-[pathways, perturbationScores, universal_ssScore] = universalDb(model,data_matched.genes,data_matched.rank,data_matched.standardRank, 1, listCond);
+[pathways, perturbationScores, universal_ssScore] = universalDb(model,data_matched.genes,data_matched.rank,data_matched.standardRank, 1, listCond)
 
 % % NOTE: exprs1 = genes values or ranked genes list from user's data
 % % expression, exprs2 = genes values or ranked genes list from standard
