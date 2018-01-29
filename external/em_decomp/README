@@ -1,0 +1,59 @@
+em_decomp
+
+Requirements
+------------
+
+em_decomp requires MATLAB, libSBML (with the MATLAB interface), Gurobi, and
+Gurobi Mex.  It has been tested on MS Windows 7 and Mac OS X 10.6 with MATLAB
+R2010b, libSBML v4.3.0 and Gurobi v4.0.1.
+
+libSBML is available from http://sbml.org/Software/libSBML.  It must be built
+to include the MATLAB interface so that the command 'TranslateSBML' is in the
+MATLAB path.
+
+Gurobi is available from http://www.gurobi.com/ and is free for academic use.
+Gurobi Mex is a MATLAB interface for Gurobi that is available from
+http://www.convexoptimization.com/wikimization/index.php/Gurobi_Mex:_A_MATLAB_interface_for_Gurobi.
+Gurobi Mex must be compiled and installed so that the command 'gurobi_mex' is
+in the MATLAB path.  The solvers GLPK, SCIP, and CPLEX can also be used (see
+solve_milp.m), but these have not been tested.
+
+Elementary mode decomposition of flux distribution in iNJ661
+------------------------------------------------------------
+
+As an example of the use of em_decomp, we illustrate how it can be applied to
+obtain an elementary mode decomposition of a flux distribution in iNJ661, a
+genome-scale model of Mycobacterium tuberculosis.
+
+1. We first load the model using the script parse_sbml.m:
+
+  >> fbamodel = parse_sbml('iNJ661_biomass9_plus_vitamins_0.052_flux.xml');
+
+When prompted with "Do you want to load the model anyway? Enter y/n", respond
+"y".
+
+2. Now solve for an optimal flux distribution by FBA:
+
+  >> v = flux_balance(fbamodel);
+
+3. Finally, we decompose the flux distribution v into elementary modes by
+
+  >> [P, w] = em_decomp(v, fbamodel);
+
+This results in a 1028 x 19 matrix P containing the 19 elementary modes as
+columns, and a 1 x 19 weight matrix w such that P * w' = v.
+
+License
+-------
+
+This is free software: you can redistribute it and/or modify it under
+the terms of the GNU Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Public License for more
+details.
+
+Desmond Lun, April 2011 (dslun@camden.rutgers.edu)
