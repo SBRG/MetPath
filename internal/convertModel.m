@@ -1,6 +1,6 @@
 function newmodel=convertModel(model)
 
-% convert the model in to one compatible with metCHANGE toolbox
+% convert the model in to one compatible with MetPath
 
 model.mets=regexprep(model.mets, '\[', '_');
 model.mets=regexprep(model.mets, '\]', '');

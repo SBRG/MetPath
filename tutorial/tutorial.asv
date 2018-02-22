@@ -83,7 +83,7 @@ modelAnaAdj = convertModel(modelAna); %THIS FUNCTION DOESN'T SEEM NECESSARY, IT 
 mode = 3;
 solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 
-[modelAnaAdjNew, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
+[modelAnaAdjNew, modelMets, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
     biomassInd, solFinalVals, inorganicMets);
 
 %MAKE SURE THESE ARE RENAMED 
@@ -105,20 +105,18 @@ solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 %NOT SURE WHAT THIS NOTE IS TALKING ABOUT
 % % NOTE: the first expression data must refer to the model and
 % % condition used for the function
-%THIS IS VERY SLOW - WHY?
+%THIS IS VERY SLOW
 %WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
 fMapAna = mapGenes(modelAnaAdjNew, exprData.genes, exprData.anaerobic, exprData.aerobic);
 
-%THE MODEL HAS NOT BEEN MODIFIED AND THUS DOESN"T NEED TO BE RETURNED OR
-%RENAMED BY THESE FUNCTIONS. INSTEAD, NEED TO DIRECTLY RETURN RESULTS LIKE
-%curCof AND PASS THOSE TO THE NEW FUNCTIONS
+
 
 % extract the pathways and calculate the production scores, degradation
 % scores and the aggregate perturbation scores
 %THIS IS THE FUNCTION THAT HAS ANOTHER OUTPUT FORMAT THAT BREAKS LATER CODE
 %TRY TO REMOVE THIS BEHAVIOR IF POSSIBLE
 %WHAT DOES CRES STAND FOR? THESE NAMES DON"T MAKE SENSE
-[resultsTabAna, cResAna] = metPath(modelAnaAdjNew, modelMetsAna, fMapAna,1,0.05);
+[resultsTabAna, cResAna] = metPath(modelAnaMod, modelMetsAna, fMapAna,1,0.05);
 
 %CAN I SPEED IT UP? A DISTANCE OF 2 SHOULDN'T TAKE THAT LONG
 % % NOTE: the cutoff distance is set to 1 in order to run the tutorial

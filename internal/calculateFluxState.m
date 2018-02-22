@@ -1,12 +1,8 @@
-function model = calculateFluxState(model, mode, allow_loops)
+function solFinalVals = calculateFluxState(model, mode, allow_loops)
 
 % define flux states
 % mode could be: 1-pFBA, 2-low tollerance, 3-minimize fluxes fixing the lb
 % of obj, 4- minimize fluxes
-
-if ~exist('mode', 'var') | ~ismember(mode, [1 2 3 4])
-    mode = input('mode could be 1-pFBA, 2-low_tolerance, 3-minimize fluxes fixing the lb of obj, 4- minimize fluxes, select one:   ');
-end
 
 if ~exist('allow_loops', 'var')
     allow_loops= 1;
@@ -45,5 +41,3 @@ if mode == 4
     tol = 10^-6;
     solFinalVals(abs(solFinalVals)<tol) = 0;
 end
-
-model.solFinalVals = solFinalVals;
