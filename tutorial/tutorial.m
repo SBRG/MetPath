@@ -31,6 +31,10 @@ load('data\tutorialData\tutorialStart');
 % We also need currency and cofactor pairs to use in the tiered pathway
 % definition.
 load('data\curCofPairs');
+cofactorPairs = {};
+compartments = {};
+currencyPairs = {};
+
 
 %% Set up solvers
 
@@ -78,12 +82,16 @@ inorganicMets = 0;
 %REFACTORED FUNCTIONS START HERE
 modelAnaAdj = convertModel(modelAna); %THIS FUNCTION DOESN'T SEEM NECESSARY, IT CONVERTS NAMES BUT WHY DO WE NEED THAT
 
+%This takes in currency and cofactor pairs and creates a structure out of
+%them (along with inorganic metabolites too)
 [metsCurCofInorg] = setupMetClasses(currencyPairs, cofactorPairs, compartments, inorganicMets);
 
+%This returns an active flux state of the model
 mode = 3;
 solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 
-[modelAnaAdjNew, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
+%This returns the network that is active
+[modelAnaAdjNoBM, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
     biomassInd, solFinalVals, inorganicMets);
 
 %MAKE SURE THESE ARE RENAMED 
@@ -107,7 +115,10 @@ solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 % % condition used for the function
 %THIS IS VERY SLOW - WHY?
 %WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
-fMapAna = mapGenes(modelAnaAdjNew, exprData.genes, exprData.anaerobic, exprData.aerobic);
+fMapAna = mapGenes(modelAnaAdjNoBM, exprData.genes, exprData.anaerobic, ...
+    exprData.aerobic);
+
+%RENAME metsCurCofInorg to something less specific and easier to read
 
 %THE MODEL HAS NOT BEEN MODIFIED AND THUS DOESN"T NEED TO BE RETURNED OR
 %RENAMED BY THESE FUNCTIONS. INSTEAD, NEED TO DIRECTLY RETURN RESULTS LIKE
@@ -118,7 +129,29 @@ fMapAna = mapGenes(modelAnaAdjNew, exprData.genes, exprData.anaerobic, exprData.
 %THIS IS THE FUNCTION THAT HAS ANOTHER OUTPUT FORMAT THAT BREAKS LATER CODE
 %TRY TO REMOVE THIS BEHAVIOR IF POSSIBLE
 %WHAT DOES CRES STAND FOR? THESE NAMES DON"T MAKE SENSE
-[resultsTabAna, cResAna] = metPath(modelAnaAdjNew, modelMetsAna, fMapAna,1,0.05);
+numPerms = 1000;
+cutoffDistance = 1;
+cutoffFraction = 0.00;
+%SHOULD SEPARATE THE PATHWAY CALCULATION FROM THE EXPRESSION DATA SCORING
+%I.E. FMAPANA SHOULD NOT BE PASSED TO IT, IT SHOULD BE IN A SEPARATE
+%FUNCTION
+%NEED TO USE GUROBI in solve_milp for the SOLVER OPTION - THIS ISN'T GREAT
+%BEHAVIOR
+paths = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
+
+%Scoring the expression for each pathway and returning a permutation
+%p-value
+cRes = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
+
+%Collecting the results
+resultsTab = createResultsTab(modelMetsAna, cRes);
+
+%WEIRD RESULTS FROM THE TUTORIAL
+%succinate doesnt have a production pathway??? could that be
+%currency/cofactor issues? and prpp doesnt have a consumption pathway???
+%There are also metabolites where there is no 0 reaction in the pathway,
+%i.e. no reaction directly consumes/produces it. This seems like it has to
+%be an issue with the filtering
 
 %CAN I SPEED IT UP? A DISTANCE OF 2 SHOULDN'T TAKE THAT LONG
 % % NOTE: the cutoff distance is set to 1 in order to run the tutorial

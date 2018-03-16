@@ -1,4 +1,4 @@
-function s = pruneMatrices(model, modelMets)
+function s = pruneMatrices(model, modelMets, metsCurCofInorg)
 
 % generate different S matrix for each type of metabolite
 
@@ -18,20 +18,20 @@ for i = 1:length(modelMets.rxnsActive)
     
     numCur = 0;
     curCurMets = {};
-    for j = 1:length(model.curCof.currencyPairsMap)
-        if ~isempty(find(strcmp(model.curCof.currencyPairsComp{j,1},curMets))) && ~isempty(find(strcmp(model.curCof.currencyPairsComp{j,2},curMets)))
+    for j = 1:length(metsCurCofInorg.currencyPairsMap)
+        if ~isempty(find(strcmp(metsCurCofInorg.currencyPairsComp{j,1},curMets))) && ~isempty(find(strcmp(metsCurCofInorg.currencyPairsComp{j,2},curMets)))
             numCur = numCur + 2;
-            curCurMets = [curCurMets;model.curCof.currencyPairsComp{j,1};model.curCof.currencyPairsComp{j,2}];
+            curCurMets = [curCurMets;metsCurCofInorg.currencyPairsComp{j,1};metsCurCofInorg.currencyPairsComp{j,2}];
         end
     end
 
 
     numCof = 0;
     model.curCofMets = {};
-    for j = 1:length(model.curCof.cofactorPairsMap)
-        if ~isempty(find(strcmp(model.curCof.cofactorPairsComp{j,1},curMets))) && ~isempty(find(strcmp(model.curCof.cofactorPairsComp{j,2},curMets)))
+    for j = 1:length(metsCurCofInorg.cofactorPairsMap)
+        if ~isempty(find(strcmp(metsCurCofInorg.cofactorPairsComp{j,1},curMets))) && ~isempty(find(strcmp(metsCurCofInorg.cofactorPairsComp{j,2},curMets)))
             numCof = numCof + 2;
-            model.curCofMets = [model.curCofMets;model.curCof.cofactorPairsComp{j,1};model.curCof.cofactorPairsComp{j,2}];
+            model.curCofMets = [model.curCofMets;metsCurCofInorg.cofactorPairsComp{j,1};metsCurCofInorg.cofactorPairsComp{j,2}];
         end
     end
 
@@ -47,9 +47,9 @@ for i = 1:length(modelMets.rxnsActive)
 
     % list of inorganic mets
     curInoMets = {};
-    for j = 1:length(model.curCof.inorganicMetsComp)
-        if ~isempty(find(strcmp(model.curCof.inorganicMetsComp{j,1},curMets)))
-            curInoMets = [curInoMets;model.curCof.inorganicMetsComp{j,1}];
+    for j = 1:length(metsCurCofInorg.inorganicMetsComp)
+        if ~isempty(find(strcmp(metsCurCofInorg.inorganicMetsComp{j,1},curMets)))
+            curInoMets = [curInoMets;metsCurCofInorg.inorganicMetsComp{j,1}];
         end
     end    
 
@@ -93,27 +93,26 @@ for i = 1:length(modelMets.rxnsActive)
         end
     end
     
-    
-    % removing single currency
-    % finding currencies:
-    numCur_single=0;
-    curCurMets_single={};
-    for j = 1:length(model.curCof.currencyMap)
-        if ~isempty(find(strcmp(model.curCof.currencyComp{j,1},curMets)))
-            numCur_single = numCur_single + 1;
-            curCurMets_single = [curCurMets_single;model.curCof.currencyComp{j,1}];
-        end
-    end
-    
-    % If there's currency and still remaining carbon remove it from the reaction
-    % in both S matrices
-    if ~isempty(curCurMets_single) && (remanining_c1-numCur_single) > 0
-        for j = 1:length(curCurMets_single)
-            curInd = find(strcmp(curCurMets_single{j},modelMets.metsActive));
-            s.sNoCurNoIno(curInd,curRxnActiveInd) = 0; 
-            s.sNoCurNoCofNoIno(curInd,curRxnActiveInd) = 0;
-        end
-    end
+%WHY DOES THIS EXIST? I DON'T REMEMBER CASES THAT REQUIRE THIS
+%     % removing single currency
+%     % finding currencies:
+%     numCur_single=0;
+%     curCurMets_single={};
+%     for j = 1:length(metsCurCofInorg.currencyMap)
+%         if ~isempty(find(strcmp(metsCurCofInorg.currencyComp{j,1},curMets)))
+%             numCur_single = numCur_single + 1;
+%             curCurMets_single = [curCurMets_single;metsCurCofInorg.currencyComp{j,1}];
+%         end
+%     end
+%     % If there's currency and still remaining carbon remove it from the reaction
+%     % in both S matrices
+%     if ~isempty(curCurMets_single) && (remanining_c1-numCur_single) > 0
+%         for j = 1:length(curCurMets_single)
+%             curInd = find(strcmp(curCurMets_single{j},modelMets.metsActive));
+%             s.sNoCurNoIno(curInd,curRxnActiveInd) = 0; 
+%             s.sNoCurNoCofNoIno(curInd,curRxnActiveInd) = 0;
+%         end
+%     end
     
     
 end

@@ -33,19 +33,23 @@ for i = 1:length(cofactorPairs)
 end
 
 
-% adding the currency metabolites
-metsCurCofInorg.currency=[currencyPairs(:,1);currencyPairs(:,2)];
-
-%SHOULDN'T HAVE TO HARD CODE CO2 IN HERE
-metsCurCofInorg.currency=[metsCurCofInorg.currency;{'co2'}];
-metsCurCofInorg.currencyComp = {};
-metsCurCofInorg.currencyMap = [];
-for i = 1:length(metsCurCofInorg.currency)
-    for j = 1:length(compartments)
-        metsCurCofInorg.currencyComp = [metsCurCofInorg.currencyComp;{[metsCurCofInorg.currency{i,1} compartments{j}]}];
-        metsCurCofInorg.currencyMap = [metsCurCofInorg.currencyMap;i];
-    end
-end
+% % adding the currency metabolites
+% if ~isempty(currencyPairs)
+%     metsCurCofInorg.currency=[currencyPairs(:,1);currencyPairs(:,2)];
+% else 
+%     metsCurCofInorg.currency = {};
+% end
+% 
+% %SHOULDN'T HAVE TO HARD CODE CO2 IN HERE
+% % metsCurCofInorg.currency=[metsCurCofInorg.currency;{'co2'}];
+% metsCurCofInorg.currencyComp = {};
+% metsCurCofInorg.currencyMap = [];
+% for i = 1:length(metsCurCofInorg.currency)
+%     for j = 1:length(compartments)
+%         metsCurCofInorg.currencyComp = [metsCurCofInorg.currencyComp;{[metsCurCofInorg.currency{i,1} compartments{j}]}];
+%         metsCurCofInorg.currencyMap = [metsCurCofInorg.currencyMap;i];
+%     end
+% end
 
 % inorganic S
 %Allow two default options

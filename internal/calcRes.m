@@ -1,23 +1,31 @@
-function cRes = calcRes(model, modelMets, fMap, calcPaths)
-
+function cRes = calcRes(model, modelMets, fMap, calcPaths, numPerms)
 
 % score the production scores, degradation scores and the aggregate 
 % perturbation score using the extracted pathways
 
+%Pathways for production/degradation
 pProdString = cell(length(modelMets.metIndsActive),1);
-wProdString = cell(length(modelMets.metIndsActive),1);
 pDegString = cell(length(modelMets.metIndsActive),1);
+
+%Weightings for production/degradation
+wProdString = cell(length(modelMets.metIndsActive),1);
 wDegString = cell(length(modelMets.metIndsActive),1);
+
+%Differential gene expression score for the pathway
 scoresProd = NaN*ones(length(modelMets.metIndsActive),1);
 scoresDeg = NaN*ones(length(modelMets.metIndsActive),1);
-pValLowProd = NaN*ones(length(modelMets.metIndsActive),1);
-pValHighProd = NaN*ones(length(modelMets.metIndsActive),1);
-pValLowDeg = NaN*ones(length(modelMets.metIndsActive),1);
-pValHighDeg = NaN*ones(length(modelMets.metIndsActive),1);
-pCurSS = cell(length(modelMets.metIndsActive),1);
-dCurSS = cell(length(modelMets.metIndsActive),1);
-numPerms = 1000;
 
+%Permutation p-value for the pathway being down-regulated
+pValLowProd = NaN*ones(length(modelMets.metIndsActive),1);
+pValLowDeg = NaN*ones(length(modelMets.metIndsActive),1);
+
+%Permutation p-value for the pathway being up-regulated
+pValHighProd = NaN*ones(length(modelMets.metIndsActive),1);
+pValHighDeg = NaN*ones(length(modelMets.metIndsActive),1);
+
+%
+Dlevels = cell(length(modelMets.metIndsActive),1);
+Plevels = cell(length(modelMets.metIndsActive),1);
 
 for i = 1:length(modelMets.metIndsActive)
     %% prod
@@ -65,16 +73,16 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
     
-    % levels
-    ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
-    
-    try
-        levels = strsplit(calcPaths.levelsProd{i}, ';');
-    catch
-        levels = split(calcPaths.levelsProd(i), ';');    
-    end
-    
-    Plevels(i) = cell2string(levels(ind));
+%     % levels
+%     ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
+%     
+%     try
+%         levels = strsplit(calcPaths.levelsProd{i}, ';');
+%     catch
+%         levels = split(calcPaths.levelsProd(i), ';');    
+%     end
+%     
+%     Plevels(i) = cell2string(levels(ind));
 
 %% deg
     curPathDeg = calcPaths.pathwaysDeg(i,:);
@@ -120,22 +128,22 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
     
-    % levels
-    ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
-    try
-        levels = strsplit(calcPaths.levelsDeg{i}, ';');
-    catch
-        levels = split(calcPaths.levelsDeg(i), ';');
-    end
-    Dlevels(i) = cell2string(levels(ind));
+%     % levels
+%     ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
+%     try
+%         levels = strsplit(calcPaths.levelsDeg{i}, ';');
+%     catch
+%         levels = split(calcPaths.levelsDeg(i), ';');
+%     end
+%     Dlevels(i) = cell2string(levels(ind));
     
     
 end
 
 
-
-cRes.pLevel = Plevels';
-cRes.dLevel = Dlevels';
+%WHAT ARE PLEVEL AND DLEVEL???
+cRes.pLevel = Plevels;
+cRes.dLevel = Dlevels;
 cRes.pProdString = pProdString;
 cRes.wProdString = wProdString;
 cRes.scoresProd = scoresProd;
@@ -148,5 +156,7 @@ cRes.pValLowProd = pValLowProd;
 cRes.pValHighProd = pValHighProd;
 cRes.pValLowDeg = pValLowDeg;
 cRes.pValHighDeg = pValHighDeg;
+cRes.pathwaysDeg = calcPaths.pathwaysDeg;
+cRes.pathwaysProd = calcPaths.pathwaysProd;
 
 

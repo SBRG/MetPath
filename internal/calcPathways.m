@@ -1,4 +1,4 @@
-function [calcPaths,srttime,fnstime] = calcPathways(model,modelMets,s,cutoffDistance ,cutoffFraction)
+function [calcPaths,srttime,fnstime] = calcPathways(model,modelMets, metsCurCofInorg,s,cutoffDistance ,cutoffFraction)
 
 % For each metabolite extract the reactions involved in the production and 
 % its degradation, estimate their weightings and their levels. The levels are
@@ -28,10 +28,8 @@ pathwaysProd = zeros(length(modelMets.metIndsActive),length(model.rxns));
 pathwaysDeg = zeros(length(modelMets.metIndsActive),length(model.rxns));
 probProd = zeros(length(modelMets.metIndsActive),1);
 probDeg = zeros(length(modelMets.metIndsActive),1);
-currencyFlag = zeros(length(modelMets.metsActive),1);
-cofactorFlag = zeros(length(modelMets.metsActive),1);
-levelsProd = cell(length(modelMets.metIndsActive),1);
-levelsDeg = cell(length(modelMets.metIndsActive),1);
+% levelsProd = cell(length(modelMets.metIndsActive),1);
+% levelsDeg = cell(length(modelMets.metIndsActive),1);
 
 wb = waitbar(0,'init'); 
 
@@ -42,13 +40,13 @@ for i = 1:length(modelMets.metIndsActive)
 
     % Reverse direction, production distance
 
-    if ~isempty(find(strcmp(curMet,model.curCof.currencyPairsComp(:))))
+    if ~isempty(find(strcmp(curMet,metsCurCofInorg.currencyPairsComp(:)), 1))
         % It's currency, use the S with inorganic removed
         curDist = distanceDirectional(s.sNoIno, i, cutoffDistance, 0);
-    elseif ~isempty(find(strcmp(curMet,model.curCof.cofactorPairsComp(:))))
+    elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.cofactorPairsComp(:)), 1))
         % It's a cofactor, use the S with currency and inorganic mets removed
         curDist = distanceDirectional(s.sNoCurNoIno, i, cutoffDistance, 0);
-    elseif ~isempty(find(strcmp(curMet,model.curCof.inorganicMetsComp(:))))
+    elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.inorganicMetsComp(:)), 1))
         % It's a inorganic met, use the full S
         curDist = distanceDirectional(modelMets.sActiveDemandDir, i, cutoffDistance, 0);
     else
@@ -86,7 +84,7 @@ for i = 1:length(modelMets.metIndsActive)
         % Use weightings to filter out tiny values
         curDemandName = ['DM_' curMet];
         % finding where the P matrix has no demand reaction
-        rxnNameInd = find(strcmp(curDemandName,modelRed.rxns));
+        rxnNameInd = strcmp(curDemandName,modelRed.rxns);
         pDemand = find(P(rxnNameInd,:)~=0);
         pWeighted = bsxfun(@times,P(:,pDemand)',w(pDemand)')';
         pSummed = sum(pWeighted,2);
@@ -111,29 +109,29 @@ for i = 1:length(modelMets.metIndsActive)
     
     
     
-    % adding distance information: distance measurement start from 0
-    
-    ind = match(model.rxns(find(pathwaysProd(i,:))), modelMets.rxnsActive(curRxnIndsActive));
-    selectedDist = curDist(find(curDist>-1));
-    selectedDist = selectedDist(ind);
-    
-    if ~isempty(selectedDist)
-        selectedDist = num2str(selectedDist);
-        levelsProd(i) = cell2string(selectedDist);
-    else
-        levelsProd(i) = {''};
-    end
+%     % adding distance information: distance measurement start from 0
+%     
+%     ind = match(model.rxns(pathwaysProd(i,:)), modelMets.rxnsActive(curRxnIndsActive));
+%     selectedDist = curDist(curDist>-1);
+%     selectedDist = selectedDist(ind);
+%     
+%     if ~isempty(selectedDist)
+%         selectedDist = num2str(selectedDist);
+%         levelsProd(i) = cell2string(selectedDist);
+%     else
+%         levelsProd(i) = {''};
+%     end
   
     
     
     % Forward direction, degradation distance
-    if ~isempty(find(strcmp(curMet,model.curCof.currencyPairsComp(:))))
+    if ~isempty(find(strcmp(curMet,metsCurCofInorg.currencyPairsComp(:)), 1))
         % It's currency, use the full S
         curDist = distanceDirectional(s.sNoIno, i, cutoffDistance, 1);
-    elseif ~isempty(find(strcmp(curMet,model.curCof.cofactorPairsComp(:))))
+    elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.cofactorPairsComp(:)), 1))
         % It's a cofactor, use the S with currency and inorganic mets removed
         curDist = distanceDirectional(s.sNoCurNoIno, i, cutoffDistance, 1);
-    elseif ~isempty(find(strcmp(curMet,model.curCof.inorganicMetsComp(:))))
+    elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.inorganicMetsComp(:)), 1))
         % It's a inorganic met, use the full S
         curDist = distanceDirectional(modelMets.sActiveDemandDir, i, cutoffDistance, 1);
     else
@@ -169,7 +167,7 @@ for i = 1:length(modelMets.metIndsActive)
         % Use weightings to filter out tiny values        
         curDemandName = ['DM_' curMet];
         % finding where the P matrix has no demand reaction
-        rxnNameInd = find(strcmp(curDemandName,modelRed.rxns));
+        rxnNameInd = strcmp(curDemandName,modelRed.rxns);
         pDemand = find(P(rxnNameInd,:)~=0);
         pWeighted = bsxfun(@times,P(:,pDemand)',w(pDemand)')';
         pSummed = sum(pWeighted,2);
@@ -192,35 +190,29 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
     
-    % adding distance information: distance measurement start from 0
+%     % adding distance information: distance measurement start from 0
+% 
+%     ind = match(model.rxns(pathwaysDeg(i,:)), modelMets.rxnsActive(curRxnIndsActive));
+%     selectedDist = curDist(curDist>-1);
+%     selectedDist = selectedDist(ind);
+%     
+%     if ~isempty(selectedDist)
+%         selectedDist = num2str(selectedDist);
+%         levelsDeg(i) = cell2string(selectedDist);
+%     else
+%         levelsDeg(i) = {''};
+%     end
 
-    ind = match(model.rxns(find(pathwaysDeg(i,:))), modelMets.rxnsActive(curRxnIndsActive));
-    selectedDist = curDist(find(curDist>-1));
-    selectedDist = selectedDist(ind);
-    
-    if ~isempty(selectedDist)
-        selectedDist = num2str(selectedDist);
-        levelsDeg(i) = cell2string(selectedDist);
-    else
-        levelsDeg(i) = {''};
-    end
-
-    
-    
+   
 end
+
 close(wb)
 fnstime = clock;
 fnstime = [fnstime(4) fnstime(5)] ;
 display(strcat('ended at: ',num2str(fnstime(1)),':',num2str(fnstime(2))))
 
-calcPaths.levelsDeg = levelsDeg;
-calcPaths.levelsProd = levelsProd;
-calcPaths.pathwaysDeg=pathwaysDeg;
-calcPaths.pathwaysProd=pathwaysProd;
-
-
-
-
-
-
+% calcPaths.levelsDeg = levelsDeg;
+% calcPaths.levelsProd = levelsProd;
+calcPaths.pathwaysDeg = pathwaysDeg;
+calcPaths.pathwaysProd = pathwaysProd;
 
