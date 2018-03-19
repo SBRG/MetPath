@@ -146,7 +146,6 @@ paths = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,c
 %THIS RETURNS A LOT MORE THAN JUST THE P-VALUES. SEEMS LIKE ANOTHER
 %OPPORTUNITY TO SPLIT UP THE FUNCTION, SINCE THE BASIC STATS WOULD BE RUN
 %ONCE BUT MAYBE YOU WANT TO TRY THE P-VALUE AT DIFFERENT LEVELS
-%MAYBE MOVE THE REST OF IT TO createResultsTab?
 numPerms = 1000;
 cRes = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
 

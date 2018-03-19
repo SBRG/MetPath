@@ -1,4 +1,4 @@
-function fMap = mapGenes(model1,genes,exprs1, exprs2)
+function fMap = mapGenes(model,parsedGPR,corrRxn, genes,exprs1, exprs2)
 
 % map the fold change of genes expression onto active rxns
 % the first expression data (exprs1) must be referred to the model
@@ -6,8 +6,6 @@ function fMap = mapGenes(model1,genes,exprs1, exprs2)
 
 
 FC = exprs1./exprs2;
-
-[parsedGPR,corrRxn] = extractGPRs(model1);
 
 map.corrRxnUnique = unique(corrRxn);
 genesCorr = cell(length(map.corrRxnUnique),1);
@@ -65,5 +63,5 @@ fMap.genesMapData = map.genesMap(rxnIndsData);
 
 fMap.corrSubsUniqueData = cell(length(fMap.corrRxnUniqueData),1);
 for i = 1:length(fMap.corrSubsUniqueData)
-        fMap.corrSubsUniqueData{i} = model1.subSystems{find(strcmp(fMap.corrRxnUniqueData{i},model1.rxns))};
+        fMap.corrSubsUniqueData{i} = model.subSystems{find(strcmp(fMap.corrRxnUniqueData{i}, model.rxns))};
 end
