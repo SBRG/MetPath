@@ -115,7 +115,7 @@ solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 % % NOTE: the first expression data must refer to the model and
 % % condition used for the function
 
-[parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM); %IS THIS A COBRA TOOLBOX FUNCTION OR DO WE NEED TO INCLUDE IT?
+[parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 
 %WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
 fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
