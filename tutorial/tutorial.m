@@ -1,5 +1,27 @@
 %% MetPath Tutorial Start
 
+%FINAL NOTES
+% MAKE SURE FUNCTIONS WORK WITH MULTIPLE OPTIONS
+% MAKE SURE FUNCTIONS WORK WITH AND WITHOUT BIOMASS IND
+% DOUBLE CHECK LICENSING FOR WHAT WE'RE BORROWING
+% MAKE SURE FUNCTIONS HAVE DESCRIPTIONS
+% MAKE SURE FUNCTION NAMES AND VARIABLES ARE DESCRIPTIVE
+% MAKE SURE THERE ARE NO MORE HARD CODED VARIABLES IN THE FUNCTIONS
+% ARE THE OUTPUTS OF METPATH ALWAYS IN THE SAME ORDER?
+% DOUBLE CHWECK IN INPUTS OF THE APS FUNCTION - NEEDS TO AHVE THE SECOND
+% OUTPUT OF METPATH
+% DOUBLE CHECK THE USE OF PARALLEL POOLS AND MAKE SURE THEY"RE CLOSED
+% PROPERLY
+% DID I REMOVE THE HARDCODED CO2 THING?
+% MAKE SURE THE STRUCTURES (VARIABLES) MAKE SENSE IN TERMS OF CONTENTS
+% modelMETS APPARENTLY HAS AN S MATRIX IN IT FOR SOME REASON, WHICH MIGHT 
+% JUST BE A NAMING ISSUE
+% REMOVE EXTRA CALCULATE FLUX OPTIONS
+% remove currencyFlag and cofactorFlag from calcPathways since they’re not used
+% MAKE SURE IT CAN HANDLE BOTH STRING AND NUMBER GENES
+% CHANGE APS TO calcAggregateScores
+
+
 % Not necessary to run clear all but can help clarity to begin 
 % with an empty Workspace
 clear
@@ -19,6 +41,7 @@ cd('C:\MetPath')
 
 %% Load tutorial variables
 
+%MAKE SURE ALL THE DATA NAMES ARE PRINTED OUT AND DESCRIBED
 % In order to use MetPath toolbox we need:
 % - a struct object (named exprData) with 
 % (1) exprData.aerobic - expression data (double) of condition 1,
@@ -118,7 +141,7 @@ solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 [parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 
 %WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
-fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
+fMapAna = mapGenes(D, parsedGPR,corrRxn, exprData.genes, ... 
     exprData.anaerobic, exprData.aerobic);
 
 %RENAME metsCurCofInorg to something less specific and easier to read
@@ -148,10 +171,10 @@ paths = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,c
 %ONCE BUT MAYBE YOU WANT TO TRY THE P-VALUE AT DIFFERENT LEVELS
 %MAYBE MOVE THE REST OF IT TO createResultsTab?
 numPerms = 1000;
-cRes = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
+cResAna = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
 
 %Collecting the results
-resultsTab = createResultsTab(modelMetsAna, cRes);
+resultsTab = createResultsTab(modelMetsAna, cResAna);
 
 %WEIRD RESULTS FROM THE TUTORIAL
 %succinate doesnt have a production pathway??? could that be
@@ -178,25 +201,32 @@ resultsTab = createResultsTab(modelMetsAna, cRes);
 
 % to obtain the aggregate perturbation score (APS) in a sorted cell array we can
 % use the following function:
-
-aggregatePerturbationScores = APS(modelMetsAna, cResAna);
+%THIS FUNCTION JUST ADDS THE TWO SCORES - THAT'S NOT HOW AN AGGREGATE SCORE
+%SHOULD WORK.
+aggregatePerturbationScores = calcAggregateScores(modelMetsAna, cResAna);
 
 
 %% Second set of analyses
+
+%ARE ANY OF THESE FUNCTIONS NECESSARY?
 
 % In order to retrieve the subSystems perturbation score it is necessary
 % compare the scores of the two differents conditions. Thus, what was done
 % for the anaerobic growing conditions has to be done also for the aerobic
 % growing conditions:
 
-%DEFINE METS SHOULDN"T PRINT ANYTHING EITHER
-
-%WHY IS MAP GENES SO SLOW??
-
-[modelStdMod,modelMetsStd] = defineMets(modelStd, biomassInd, 2, currencyPairs, cofactorPairs, compartments,1,0);
-fMapStd = mapGenes(modelStdMod, fc.genes, fc.aerobic, fc.anaerobic);
-[resultsTab, cResStd] = metPath(modelStdMod, modelMets_std, fMapStd, 1, 0.05);
-
+modelStdAdj = convertModel(modelStd);
+[metsCurCofInorg] = setupMetClasses(currencyPairs, cofactorPairs, compartments, inorganicMets);
+mode = 3;
+solFinalVals = calculateFluxState(modelStdAdj, mode, allowLoops);
+[modelStdAdjNoBM, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelStdAdj,...
+    biomassInd, solFinalVals, inorganicMets);
+[parsedGPR,corrRxn] = extractGPRs(modelStdAdjNoBM);
+fMapAna = mapGenes(modelStdAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
+    exprData.anaerobic, exprData.aerobic);
+cutoffDistance = 1;
+cutoffFraction = 0.00;
+paths = metPath(modelStdAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
 
 % Then we can score the subSystems Perturbation by
 

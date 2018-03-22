@@ -4,7 +4,7 @@ function subSystemsPerturbation = subSystemsScores(model, cRes, modelMets,model2
 % this function permit by means of perturbation score which are the most
 % perturbed subSystems in the model. 
     
-utilizationTab = APS(modelMets, cRes);
+utilizationTab = calcAggregateScores(modelMets, cRes);
 
 cnt = {};
 strCnt = {};

@@ -1,5 +1,27 @@
 %% MetPath Tutorial Start
 
+%FINAL NOTES
+% MAKE SURE FUNCTIONS WORK WITH MULTIPLE OPTIONS
+% MAKE SURE FUNCTIONS WORK WITH AND WITHOUT BIOMASS IND
+% DOUBLE CHECK LICENSING FOR WHAT WE'RE BORROWING
+% MAKE SURE FUNCTIONS HAVE DESCRIPTIONS
+% MAKE SURE FUNCTION NAMES AND VARIABLES ARE DESCRIPTIVE
+% MAKE SURE THERE ARE NO MORE HARD CODED VARIABLES IN THE FUNCTIONS
+% ARE THE OUTPUTS OF METPATH ALWAYS IN THE SAME ORDER?
+% DOUBLE CHWECK IN INPUTS OF THE APS FUNCTION - NEEDS TO AHVE THE SECOND
+% OUTPUT OF METPATH
+% DOUBLE CHECK THE USE OF PARALLEL POOLS AND MAKE SURE THEY"RE CLOSED
+% PROPERLY
+% DID I REMOVE THE HARDCODED CO2 THING?
+% MAKE SURE THE STRUCTURES (VARIABLES) MAKE SENSE IN TERMS OF CONTENTS
+% modelMETS APPARENTLY HAS AN S MATRIX IN IT FOR SOME REASON, WHICH MIGHT 
+% JUST BE A NAMING ISSUE
+% REMOVE EXTRA CALCULATE FLUX OPTIONS
+% remove currencyFlag and cofactorFlag from calcPathways since they’re not used
+% MAKE SURE IT CAN HANDLE BOTH STRING AND NUMBER GENES
+% CHANGE APS TO calcAggregateSco
+
+
 % Not necessary to run clear all but can help clarity to begin 
 % with an empty Workspace
 clear
@@ -19,6 +41,7 @@ cd('C:\MetPath')
 
 %% Load tutorial variables
 
+%MAKE SURE ALL THE DATA NAMES ARE PRINTED OUT AND DESCRIBED
 % In order to use MetPath toolbox we need:
 % - a struct object (named exprData) with 
 % (1) exprData.aerobic - expression data (double) of condition 1,
@@ -115,7 +138,7 @@ solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
 % % NOTE: the first expression data must refer to the model and
 % % condition used for the function
 
-[parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM); %IS THIS A COBRA TOOLBOX FUNCTION OR DO WE NEED TO INCLUDE IT?
+[parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 
 %WHAT DOES FMAP STAND FOR?? TRY TO COME UP WITH A MORE CLEAR NAME
 fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
@@ -146,11 +169,12 @@ paths = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,c
 %THIS RETURNS A LOT MORE THAN JUST THE P-VALUES. SEEMS LIKE ANOTHER
 %OPPORTUNITY TO SPLIT UP THE FUNCTION, SINCE THE BASIC STATS WOULD BE RUN
 %ONCE BUT MAYBE YOU WANT TO TRY THE P-VALUE AT DIFFERENT LEVELS
+%MAYBE MOVE THE REST OF IT TO createResultsTab?
 numPerms = 1000;
-cRes = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
+cResAna = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, paths, numPerms);
 
 %Collecting the results
-resultsTab = createResultsTab(modelMetsAna, cRes);
+resultsTab = createResultsTab(modelMetsAna, cResAna);
 
 %WEIRD RESULTS FROM THE TUTORIAL
 %succinate doesnt have a production pathway??? could that be
