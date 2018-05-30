@@ -2,7 +2,7 @@ function [data_matched] = matchExpressionData(data, RNASeq, standardExpression)
 
 % this simple function match the genes from experimental data to those from
 % standard conditions. data must be a struct object with genes (gene
-% genes - Blattner number) and expression values.
+% names - e.g. Blattner number) and expression values.
 % RNASeq = flag. If 1 convert experimental data and standard expression data
 % from the universal database in a ranked list in order to allow comparison
 % of RNA-seq data to microarray expression data

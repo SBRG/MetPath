@@ -1,4 +1,4 @@
-function fMap = mapGenes(model,parsedGPR,corrRxn, genes,exprs1, exprs2)
+function fMap = mapGenes(model, parsedGPR, corrRxn, genes, exprs1, exprs2)
 
 % map the fold change of genes expression onto active rxns
 % the first expression data (exprs1) must be referred to the model

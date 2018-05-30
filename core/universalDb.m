@@ -1,4 +1,4 @@
-function [pathways, perturbationScores, universal_ssScore] = universalDb(model,genes,exprs1,exprs2, ssScore, listCond)
+function [pathways, perturbationScores, universal_ssScore] = universalDb(model,ssScore, data_matched, listCond,parsedGPR,corrRxn, numPerms)
 
 % this function permits to map expression data of the condition of interest
 % (expr1) against the second condition in the universal database. It
@@ -6,11 +6,18 @@ function [pathways, perturbationScores, universal_ssScore] = universalDb(model,g
 % if ssScore = 1 -> universal_ssScore: perturbation of model subSystems
 
 model;
+data_matched;
+listCond;
+parsedGPR;
+corrRxn;
+numPerms;
+ssScore;
+
+
+
 genes = data_matched.genes;
 exprs1 = data_matched.rank;
 exprs2 = data_matched.standardRank;
-ssScore = 1;
-listCond;
 
 universal_ut = {};
 universal_paths = {};
@@ -44,14 +51,14 @@ prod_string = cell(length(model.metNames),1);
 
 
 for i = 1:numel(listCond)
-    i = 1
+    i = 1 %THIS APPEARS TO BE A TESTING LINE
     tic;
     [i, numel(listCond)]
-
+    
     try
         load(char(listCond(i)))
     catch
-        warning('universal Db folder needs to be in path')
+        warning('condition file needs to be in path')
     end
     
     modelMets.metIndsActive = modelMets.metIndsActiveCarbon;
@@ -60,12 +67,22 @@ for i = 1:numel(listCond)
     
     % first condition
     
-    fMap = mapGenes(model,genes,exprs1, exprs2);
-    tmp_cRes = calcRes(model, modelMets, fMap, calcPaths_dist2001);
+    %fMap = mapGenes(model, parsedGPR, corrRxn, genes, exprs1, exprs2);
+    %tmp_cRes = calcRes(model, modelMets, fMap, calcPaths, numPerms);
+    
+    
+    %REDO BASED ON THE UPDATED FUNCTIONS
+    fMapStd = mapGenes(modelStdAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
+    exprData.anaerobic, exprData.aerobic);
+    cutoffDistance = 1;
+    cutoffFraction = 0.00;
+    pathsStd = metPath(modelStdAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
+    cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
+    
     
     % universal ss score
     
-    universal_ut{i} = APS(modelMets, tmp_cRes);
+    universal_ut{i} = calcAggregateScores(modelMets, tmp_cRes);
     universal_ut{i}(cell2mat(universal_ut{i}(:,4)) == 0,:) = [];
     tmpuniversal_paths = universal_ut{i};
     universal_paths = [universal_paths; tmpuniversal_paths];
@@ -118,11 +135,11 @@ for i = 1:numel(listCond)
     if ssScore == 1
         
         % second condition
-        fMap_2 = mapGenes(model,genes,exprs2, exprs1);
+        fMap_2 = mapGenes(model,parsedGPR,corrRxn,genes,exprs2, exprs1);
         tmp_cRes_2 = calcRes(model, modelMets, fMap_2, calcPaths_dist2001);
         
         % universal ss score
-        universal_ut_2{i} = APS(modelMets, tmp_cRes_2);
+        universal_ut_2{i} = calcAggregateScores(modelMets, tmp_cRes_2);
         universal_ut_2{i}(cell2mat(universal_ut_2{i}(:,4))==0,:) = [];
         tmpuniversal_paths_2 = universal_ut_2{i};
         universal_paths_2 = [universal_paths_2; tmpuniversal_paths_2];

@@ -90,7 +90,7 @@ results1 = topScore;
 if exist('model2', 'var')
 
     model = model2;
-    utilizationTab = APS(modelMets, cRes2);
+    utilizationTab = calcAggregateScores(modelMets, cRes2);
     modelMets = modelMets2;
     cnt = {};
     strCnt = {};

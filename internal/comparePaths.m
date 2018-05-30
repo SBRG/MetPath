@@ -1,7 +1,7 @@
 function [common, diffPaths] = comparePaths(model1,model2, cRes1,cRes2, modelMets1,modelMets2)
 
-aggregatePerturbationScore1 = APS(modelMets1,cRes1);
-aggregatePerturbationScore2 = APS(modelMets2,cRes2);
+aggregatePerturbationScore1 = calcAggregateScores(modelMets1,cRes1);
+aggregatePerturbationScore2 = calcAggregateScores(modelMets2,cRes2);
 
 vals1 = cell2mat(aggregatePerturbationScore1(:,4));
 vals2 = cell2mat(aggregatePerturbationScore2(:,4));
