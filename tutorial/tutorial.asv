@@ -50,38 +50,36 @@ changeCobraSolver('gurobi6','MIQP')
 
 %% First set of analyses
 
-% For the anaerobic condition, convert the model to be handled by the toolbox, 
+% for anaerobic condition convert the model to be handled by the toolbox, 
 % define the flux state and generate modelMets struct object necessary for 
 % the next steps with:
 
 biomassInd = find(strncmp('BIOMASS',modelStd.rxns,length('BIOMASS')));
-%Alternatively, the user can specify a biomass index if the name does not match
 %biomassInd = [];
 
-%Can ignore inorganic metabolite handling, use a custom list, or use the
-%standard list
-% inorganicMets = 1; %Use default list
-% inorganicMets = 0; %Ignore
-% inorganicMets = {}; %Custom list (user must ensure met names are valid)
+allowLoops = 1;
+
+inorganicMets = 0;
+
 % inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3',...
 % 'h2o','co2','co','h2o2','o2s','h2s','etha', 'no','fe3hox','3fe4s',...
-% '4fe4s','2fe2s', 'etoh','mobd','cu','cu2'}; %Example of a custom list
+% '4fe4s','2fe2s', 'etoh','mobd','cu','cu2'};
 
-% Converting the model formatting for string matching
-modelAnaAdj = convertModel(modelAna); 
+
+modelAnaAdj = convertModel(modelAna); %THIS FUNCTION DOESN'T SEEM NECESSARY, IT CONVERTS NAMES BUT WHY DO WE NEED THAT
 
 %This takes in currency and cofactor pairs and creates a structure out of
 %them (along with inorganic metabolites too)
 [metsCurCofInorg] = setupMetClasses(currencyPairs, cofactorPairs, compartments, inorganicMets);
 
 %This returns an active flux state of the model
-%This can be substituted for a user-defined representative flux state
-tolFlux = 10^-6; %The lowest non-zero flux that will not be truncated
-fluxes = calculateFluxState(modelAnaAdj, tolFlux);
+mode = 3;
+solFinalVals = calculateFluxState(modelAnaAdj, mode, allowLoops);
+
 
 %This returns the network that is active
 [modelAnaAdjNoBM, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
-    biomassInd, fluxes, inorganicMets, compartments);
+    biomassInd, solFinalVals, inorganicMets);
 
 [parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 

@@ -53,13 +53,13 @@ end
 
 % inorganic S
 %Allow two default options
-if inorganicMets == 1
-    inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3', 'h2o','co2','co','h2o2','o2s','h2s',...
-        'etha', 'no','fe3hox','3fe4s','4fe4s','2fe2s', 'etoh','mobd','cu','cu2'};
-elseif inorganicMets == 0
-    inorganicMets = {};
-else
-    inorganicMets = inorganicMets;
+if ~iscell(inorganicMets)
+    if inorganicMets == 1
+        inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3', 'h2o','co2','co','h2o2','o2s','h2s',...
+            'etha', 'no','fe3hox','3fe4s','4fe4s','2fe2s', 'etoh','mobd','cu','cu2'};
+    elseif inorganicMets == 0
+        inorganicMets = {};
+    end
 end
 
 inorganicMetsMap = [];
