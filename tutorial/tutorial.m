@@ -114,9 +114,10 @@ resultsTab = createResultsTab(modelMetsAna, cResAna);
 % the pathways extraction (cutoffDistance). It is not suggested to use a
 % distance too high since it leads to an increment of the time needed and
 % to a loss of statistical power. A distance of 2 or 3 is a good tradeoff.
-% Since some reactions, specially at longer distances, partecipate barely
-% in the pathway is possible to set a threshold to filter out that reactions
-% (cutoffFraction)
+
+% Also since some reactions barely participate in the pathway, due to low
+% flux contribution fraction, it is possible to set a threshold to filter 
+% out those reactions using the cutoffFraction option
 
 
 % to obtain the aggregate perturbation score (APS) in a sorted cell array we can
@@ -135,10 +136,10 @@ aggregatePerturbationScoresAna = calcAggregateScores(modelMetsAna, cResAna);
 % growing conditions:
 
 modelStdAdj = convertModel(modelStd);
-mode = 3;
-solFinalValsStd = calculateFluxState(modelStdAdj, mode, allowLoops);
+tolFlux = 10^-6; 
+fluxesStd = calculateFluxState(modelStdAdj, tolFlux);
 [modelStdAdjNoBM, modelMetsStd, nonCarbonMets, fluxesRed] = getActiveNetwork(modelStdAdj,...
-    biomassInd, solFinalValsStd, inorganicMets);
+    biomassInd, fluxesStd, inorganicMets, compartments);
 [parsedGPR,corrRxn] = extractGPRs(modelStdAdjNoBM);
 fMapStd = mapGenes(modelStdAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
     exprData.anaerobic, exprData.aerobic);
@@ -150,8 +151,7 @@ cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
 % Then we can score the subSystems Perturbation by
 subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna,modelStd, cResStd, modelMetsStd);
 
-% this function will predict the overall perturbation of the subSystems in the model
-
+% this function will calculate the overall perturbation of the subSystems in the model
 
 % to generate a table with a comparisons in terms of perturbation score and
 % used rxns we can use the comparePaths function:
@@ -168,11 +168,6 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna
 
 
 [Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaAdjNoBM, modelMetsAna);
-
-
-
-
-
 
 
 
