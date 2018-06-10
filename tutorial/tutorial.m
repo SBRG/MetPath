@@ -10,7 +10,7 @@ clear
 % (https://opencobra.github.io/cobratoolbox/stable/).
 % Its installation is mandatory.
 % If you have not yet run initCobraToolbox, do so here (otherwise skip)
-run initCobraToolbox
+% run initCobraToolbox
 
 %% Set current directory
 
@@ -63,9 +63,9 @@ biomassInd = find(strncmp('BIOMASS',modelStd.rxns,length('BIOMASS')));
 % inorganicMets = 1; %Use default list
 % inorganicMets = 0; %Ignore
 % inorganicMets = {}; %Custom list (user must ensure met names are valid)
-% inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3',...
-% 'h2o','co2','co','h2o2','o2s','h2s','etha', 'no','fe3hox','3fe4s',...
-% '4fe4s','2fe2s', 'etoh','mobd','cu','cu2'}; %Example of a custom list
+inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3',...
+'h2o','co2','co','h2o2','o2s','h2s','etha', 'no','fe3hox','3fe4s',...
+'4fe4s','2fe2s', 'etoh','mobd','cu','cu2'}; %Example of a custom list
 
 % Converting the model formatting for string matching
 modelAnaAdj = convertModel(modelAna); 
@@ -92,7 +92,7 @@ fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ...
 % extract the pathways and calculate the production scores, degradation
 % scores and the aggregate perturbation scores
 cutoffDistance = 1;
-cutoffFraction = 0.00;
+cutoffFraction = 0.05;
 pathsAna = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
 
 %Scoring the expression for each pathway and returning a permutation

@@ -8,7 +8,7 @@ function fluxes = calculateFluxState(model, tolFlux)
 % tolFlux is the lowest value for a non-zero flux, i.e. all values below
 % will be truncated
 
-sol = optimizeCbModel(model,'min',10^-6);
+sol = optimizeCbModel(model,'max',10^-6);
 fluxes = sol.x;
 fluxes(abs(fluxes)<tolFlux) = 0;
 

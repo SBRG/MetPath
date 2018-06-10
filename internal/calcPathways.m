@@ -11,7 +11,7 @@ function [calcPaths,srttime,fnstime] = calcPathways(model,modelMets, metsCurCofI
 
 srttime = clock;
 srttime = [srttime(4) srttime(5)] ;
-display(strcat('started at: ',num2str(srttime(1)),':',num2str(srttime(2))))
+display(strcat('started at ',' ',num2str(srttime(1)),':',num2str(srttime(2))))
 
 if ~exist('cutoffDistance', 'var')
     cutoffDistance = 3;

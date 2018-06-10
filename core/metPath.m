@@ -12,4 +12,3 @@ s = pruneMatrices(model, modelMets, metsCurCofInorg);
 
 %Pathway calculation
 calcPaths = calcPathways(model,modelMets, metsCurCofInorg,s,cutoffDistance ,cutoffFraction);
-
