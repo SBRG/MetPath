@@ -33,7 +33,7 @@ load('data\tutorialData\tutorialStart');
 % definition.
 load('data\curCofPairs');
 
-%If cofactor sets are not desired, run this set of lines:
+%If pre-determined cofactor sets are not desired, run this set of lines:
 % cofactorPairs = {};
 % compartments = {};
 % currencyPairs = {};
@@ -42,13 +42,13 @@ load('data\curCofPairs');
 %% Set up solvers
 
 % Any solver handled by the COBRA toolbox can be used
-changeCobraSolver('gurobi6','LP');
-changeCobraSolver('gurobi6','QP');
-changeCobraSolver('gurobi6','MILP');
-changeCobraSolver('gurobi6','MIQP')
+changeCobraSolver('gurobi','LP');
+changeCobraSolver('gurobi','QP');
+changeCobraSolver('gurobi','MILP');
+changeCobraSolver('gurobi','MIQP')
 
 
-%% First set of analyses
+%% Case 1: Calculating pathways de novo
 
 % For the anaerobic condition, convert the model to be handled by the toolbox, 
 % define the flux state and generate modelMets struct object necessary for 
@@ -83,8 +83,10 @@ fluxes = calculateFluxState(modelAnaAdj, tolFlux);
 [modelAnaAdjNoBM, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
     biomassInd, fluxes, inorganicMets, compartments);
 
+%Organize Gene-Protein-Reaction (GPRs) for data mapping purposes
 [parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 
+%Map expression data to model
 fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
     exprData.anaerobic, exprData.aerobic);
 
@@ -93,14 +95,22 @@ fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ...
 % scores and the aggregate perturbation scores
 cutoffDistance = 1;
 cutoffFraction = 0.05;
-pathsAna = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
+
+%Defining different S matrices for normal, cofactor, and currency
+%metabolites
+sPruned = pruneMatrices(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg);
+
+%Pathway calculation
+pathsAna = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, sPruned, cutoffDistance,cutoffFraction);
 
 %Scoring the expression for each pathway and returning a permutation
 %p-value
-numPerms = 1000;
+%cRes =  vector used to generate resultsTab, useful for other functions
+numPerms = 100;
 cResAna = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, pathsAna, numPerms);
 
 %Collecting the results
+%   resultsTab = a cell array that could be sorted
 resultsTab = createResultsTab(modelMetsAna, cResAna);
 
 
@@ -126,8 +136,10 @@ resultsTab = createResultsTab(modelMetsAna, cResAna);
 aggregatePerturbationScoresAna = calcAggregateScores(modelMetsAna, cResAna);
 
 
-%% Second set of analyses
+%% Case 2:
 
+%MAKE THIS SECTION INTERACT BETTER - IT'S NOT ACTUALLY A SECOND SET OF
+%ANALYSES, IT'S A SECOND CONDITION WHICH WE THEN COMPARE
 
 
 % In order to retrieve the subSystems perturbation score it is necessary
@@ -145,10 +157,13 @@ fMapStd = mapGenes(modelStdAdjNoBM, parsedGPR,corrRxn, exprData.genes, ...
     exprData.anaerobic, exprData.aerobic);
 cutoffDistance = 1;
 cutoffFraction = 0.00;
-pathsStd = metPath(modelStdAdjNoBM, modelMetsAna, metsCurCofInorg, cutoffDistance,cutoffFraction);
+
+pathsStd = metPath(modelStdAdjNoBM, modelMetsStd, metsCurCofInorg, cutoffDistance,cutoffFraction);
 cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
 
-% Then we can score the subSystems Perturbation by
+
+%% Compare the two states %CHANGE THIS NAME
+% Then we can score the subSystems Perturbation with:
 subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna,modelStd, cResStd, modelMetsStd);
 
 % this function will calculate the overall perturbation of the subSystems in the model

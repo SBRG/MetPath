@@ -23,10 +23,6 @@ pValLowDeg = NaN*ones(length(modelMets.metIndsActive),1);
 pValHighProd = NaN*ones(length(modelMets.metIndsActive),1);
 pValHighDeg = NaN*ones(length(modelMets.metIndsActive),1);
 
-%
-Dlevels = cell(length(modelMets.metIndsActive),1);
-Plevels = cell(length(modelMets.metIndsActive),1);
-
 for i = 1:length(modelMets.metIndsActive)
     %% prod
     curPathProd = calcPaths.pathwaysProd(i,:);
@@ -65,7 +61,7 @@ for i = 1:length(modelMets.metIndsActive)
         pValHighProd(i) = pValHigh;
     end
     
-    % add SS info
+    % add subsystem info
     if ~isempty(curCell)
         tmp_curSS = model.subSystems(match(curCell, model.rxns));
         if ~isempty(tmp_curSS)
@@ -73,18 +69,8 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
     
-%     % levels
-%     ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
-%     
-%     try
-%         levels = strsplit(calcPaths.levelsProd{i}, ';');
-%     catch
-%         levels = split(calcPaths.levelsProd(i), ';');    
-%     end
-%     
-%     Plevels(i) = cell2string(levels(ind));
 
-%% deg
+    %% deg
     curPathDeg = calcPaths.pathwaysDeg(i,:);
     curRxnsActive = model.rxns(find(curPathDeg));
     curRxnsMap = intersect(curRxnsActive, fMap.corrRxnUniqueData);
@@ -120,7 +106,7 @@ for i = 1:length(modelMets.metIndsActive)
     end
     wDegString{i} = curString;
     
-    % ss info
+    % subsystem info
     if ~isempty(curCell)
         tmp_curSS = model.subSystems(match(curCell, model.rxns));
         if ~isempty(tmp_curSS)
@@ -128,22 +114,9 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
     
-%     % levels
-%     ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
-%     try
-%         levels = strsplit(calcPaths.levelsDeg{i}, ';');
-%     catch
-%         levels = split(calcPaths.levelsDeg(i), ';');
-%     end
-%     Dlevels(i) = cell2string(levels(ind));
-    
-    
 end
 
 
-%WHAT ARE PLEVEL AND DLEVEL???
-cRes.pLevel = Plevels;
-cRes.dLevel = Dlevels;
 cRes.pProdString = pProdString;
 cRes.wProdString = wProdString;
 cRes.scoresProd = scoresProd;
@@ -156,7 +129,3 @@ cRes.pValLowProd = pValLowProd;
 cRes.pValHighProd = pValHighProd;
 cRes.pValLowDeg = pValLowDeg;
 cRes.pValHighDeg = pValHighDeg;
-cRes.pathwaysDeg = calcPaths.pathwaysDeg;
-cRes.pathwaysProd = calcPaths.pathwaysProd;
-
-
