@@ -3,7 +3,7 @@ MetPath is a set of functions for performing metabolic pathway-based gene expres
 
 The MetPath software package accompanies the manuscript:
 
-"Differential expression analysis utilizing metabolic pathways based on physiological flux states"
+[SUBMITTED] "Differential expression analysis utilizing metabolic pathways based on physiological flux states"
 Gianluca Mattei, Daniel C. Zielinski, Zhuohui Gan, Matteo Ramazzotti, Bernhard O. Palsson
 
 The folders in this package are the following:
