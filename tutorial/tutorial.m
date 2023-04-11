@@ -2,7 +2,7 @@
 
 % Not necessary to run clear all but can help clarity to begin 
 % with an empty Workspace
-clear
+clear all
 
 %% Set up paths
 
@@ -11,6 +11,14 @@ clear
 % Its installation is mandatory.
 % If you have not yet run initCobraToolbox, do so here (otherwise skip)
 % run initCobraToolbox
+
+%% Set up solvers
+
+% Any solver handled by the COBRA toolbox can be used
+changeCobraSolver('gurobi','LP');
+changeCobraSolver('gurobi','QP');
+changeCobraSolver('gurobi','MILP');
+changeCobraSolver('gurobi','MIQP')
 
 %% Set current directory
 
@@ -28,6 +36,9 @@ cd('C:\MetPath')
 % modelAna - iJO1366 with exchange reactions set to anaerobic growth on glc
 % modelStd - iJO1366 with exchange reactions set to aerobic growth on glc
 load('data\tutorialData\tutorialStart');
+%Need to transpose csense for latest COBRA version
+modelAna.csense = modelAna.csense';
+modelStd.csense = modelStd.csense';
 
 % We also need currency and cofactor pairs to use in the tiered pathway
 % definition.
@@ -39,13 +50,6 @@ load('data\curCofPairs');
 % currencyPairs = {};
 
 
-%% Set up solvers
-
-% Any solver handled by the COBRA toolbox can be used
-changeCobraSolver('gurobi','LP');
-changeCobraSolver('gurobi','QP');
-changeCobraSolver('gurobi','MILP');
-changeCobraSolver('gurobi','MIQP')
 
 
 %% Case 1: Calculating pathways de novo
@@ -67,8 +71,9 @@ inorganicMets = {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3',...
 'h2o','co2','co','h2o2','o2s','h2s','etha', 'no','fe3hox','3fe4s',...
 '4fe4s','2fe2s', 'etoh','mobd','cu','cu2'}; %Example of a custom list
 
-% Converting the model formatting for string matching
-modelAnaAdj = convertModel(modelAna); 
+% Converting the model ID formatting for string matching
+% modelAnaAdj = convertModel(modelAna); 
+modelAnaAdj = modelAna; 
 
 %This takes in currency and cofactor pairs and creates a structure out of
 %them (along with inorganic metabolites too)
@@ -80,8 +85,16 @@ tolFlux = 10^-6; %The lowest non-zero flux that will not be truncated
 fluxes = calculateFluxState(modelAnaAdj, tolFlux);
 
 %This returns the network that is active
-[modelAnaAdjNoBM, modelMetsAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
-    biomassInd, fluxes, inorganicMets, compartments);
+[modelAnaAdjNoBM, structActiveAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
+    biomassInd, fluxes, inorganicMets, compartments, tolFlux);
+
+%DUE TO TRUNCATING FLUXES, THERE COULD BE METABOLITES THAT ARE DISCONNECTED
+%FROM THE REST OF THE NETWORK
+
+%BIOMASS IS NOW REMOVED - NEED TO MAKE SURE DONT NEED TO RECALCULATE FLUX NOW
+
+%I DON'T UNDERSTAND HOW modelMetsAna CONTAINS THAT METABOLITE - IT DOESN'T
+%CONNECT TO ANYTHING IT SAYS - IS THIS A PROBLEM IN GETACTIVENETWORK?
 
 %Organize Gene-Protein-Reaction (GPRs) for data mapping purposes
 [parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
@@ -90,28 +103,27 @@ fluxes = calculateFluxState(modelAnaAdj, tolFlux);
 fMapAna = mapGenes(modelAnaAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
     exprData.anaerobic, exprData.aerobic);
 
-
-% extract the pathways and calculate the production scores, degradation
-% scores and the aggregate perturbation scores
-cutoffDistance = 1;
-cutoffFraction = 0.05;
-
 %Defining different S matrices for normal, cofactor, and currency
 %metabolites
-sPruned = pruneMatrices(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg);
+sPruned = pruneMatrices(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg);
+
+%Extract the pathways and calculate the production scores, degradation
+%scores and the aggregate perturbation scores
+cutoffDistance = 3;
+cutoffFraction = 0.05;
 
 %Pathway calculation
-pathsAna = metPath(modelAnaAdjNoBM, modelMetsAna, metsCurCofInorg, sPruned, cutoffDistance,cutoffFraction);
+pathsAna = metPath(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg, sPruned, cutoffDistance,cutoffFraction);
 
 %Scoring the expression for each pathway and returning a permutation
 %p-value
 %cRes =  vector used to generate resultsTab, useful for other functions
 numPerms = 100;
-cResAna = calcRes(modelAnaAdjNoBM, modelMetsAna, fMapAna, pathsAna, numPerms);
+cResAna = calcRes(modelAnaAdjNoBM, structActiveAna, fMapAna, pathsAna, numPerms);
 
 %Collecting the results
 %   resultsTab = a cell array that could be sorted
-resultsTab = createResultsTab(modelMetsAna, cResAna);
+resultsTab = createResultsTab(structActiveAna, cResAna);
 
 
 % NOTE: the cutoff distance is set to 1 in order to run the tutorial
@@ -133,7 +145,7 @@ resultsTab = createResultsTab(modelMetsAna, cResAna);
 % to obtain the aggregate perturbation score (APS) in a sorted cell array we can
 % use the following function:
 
-aggregatePerturbationScoresAna = calcAggregateScores(modelMetsAna, cResAna);
+aggregatePerturbationScoresAna = calcAggregateScores(structActiveAna, cResAna);
 
 
 %% Case 2:
@@ -164,7 +176,7 @@ cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
 
 %% Compare the two states %CHANGE THIS NAME
 % Then we can score the subSystems Perturbation with:
-subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna,modelStd, cResStd, modelMetsStd);
+subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActiveAna,modelStd, cResStd, modelMetsStd);
 
 % this function will calculate the overall perturbation of the subSystems in the model
 
@@ -172,7 +184,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna
 % used rxns we can use the comparePaths function:
 
 [commonPaths, diffPaths] = comparePaths(modelAnaAdjNoBM,modelStdAdjNoBM,...
-    cResAna,cResStd, modelMetsAna,modelMetsStd);
+    cResAna,cResStd, structActiveAna,modelMetsStd);
 
 % % NOTE: in this case, since we extracted paths using a distance = 1 they
 % will result exactly the same except for the perturbation score.
@@ -182,7 +194,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, modelMetsAna
 % (in production reactions, degradation reactions and in th whole path)
 
 
-[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaAdjNoBM, modelMetsAna);
+[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaAdjNoBM, structActiveAna);
 
 
 

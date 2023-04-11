@@ -1,29 +1,29 @@
-function cRes = calcRes(model, modelMets, fMap, calcPaths, numPerms)
+function cRes = calcRes(model, structActive, fMap, calcPaths, numPerms)
 
 % score the production scores, degradation scores and the aggregate 
 % perturbation score using the extracted pathways
 
 %Pathways for production/degradation
-pProdString = cell(length(modelMets.metIndsActive),1);
-pDegString = cell(length(modelMets.metIndsActive),1);
+pProdString = cell(length(structActive.metIndsActive),1);
+pDegString = cell(length(structActive.metIndsActive),1);
 
 %Weightings for production/degradation
-wProdString = cell(length(modelMets.metIndsActive),1);
-wDegString = cell(length(modelMets.metIndsActive),1);
+wProdString = cell(length(structActive.metIndsActive),1);
+wDegString = cell(length(structActive.metIndsActive),1);
 
 %Differential gene expression score for the pathway
-scoresProd = NaN*ones(length(modelMets.metIndsActive),1);
-scoresDeg = NaN*ones(length(modelMets.metIndsActive),1);
+scoresProd = NaN*ones(length(structActive.metIndsActive),1);
+scoresDeg = NaN*ones(length(structActive.metIndsActive),1);
 
 %Permutation p-value for the pathway being down-regulated
-pValLowProd = NaN*ones(length(modelMets.metIndsActive),1);
-pValLowDeg = NaN*ones(length(modelMets.metIndsActive),1);
+pValLowProd = NaN*ones(length(structActive.metIndsActive),1);
+pValLowDeg = NaN*ones(length(structActive.metIndsActive),1);
 
 %Permutation p-value for the pathway being up-regulated
-pValHighProd = NaN*ones(length(modelMets.metIndsActive),1);
-pValHighDeg = NaN*ones(length(modelMets.metIndsActive),1);
+pValHighProd = NaN*ones(length(structActive.metIndsActive),1);
+pValHighDeg = NaN*ones(length(structActive.metIndsActive),1);
 
-for i = 1:length(modelMets.metIndsActive)
+for i = 1:length(structActive.metIndsActive)
     %% prod
     curPathProd = calcPaths.pathwaysProd(i,:);
     curRxnsActive = model.rxns(find(curPathProd));

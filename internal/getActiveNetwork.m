@@ -1,11 +1,11 @@
-function [model, modelMets, nonCarbonMets, fluxesRed]= getActiveNetwork(model,biomassInd, fluxes, inorganicMets, compartments)
+function [modelNoBM, structActive, nonCarbonMets, fluxesRed]= getActiveNetwork(model,biomassInd, fluxes, inorganicMets, compartments,tolFlux)
 
 % This function takes a flux state and returns the active sets of
 % metabolites and reactions
 % Inputs
 %   model: Constraint-based model to be used
 %   biomassInd: Index of the biomass objective reaction
-%   fluxes:
+%   fluxes: Representative flux solution
 %   inorganicMets: 
 %      1 for a default list:
 %       {'o2', 'so2','so3','so4','nh4','no2','no3','fe2','fe3', 'h2o',...
@@ -14,9 +14,11 @@ function [model, modelMets, nonCarbonMets, fluxesRed]= getActiveNetwork(model,bi
 %      0 for an empty list
 %      Or a user-provided list e.g. {'no','fe2'}
 % Outputs
-%   model:
-%   modelMets:
+%   modelNoBM: Model with biomass reactions removed to prevent non-pathway
+%   connections between metabolites
+%   structActive: Structure of active and inactive metabolites and reactions
 %   nonCarbonMets: Metabolites not containing any carbon
+%   fluxesRed: Corresponding flux solution with biomass removed
 
 %% Setup undesirable fluxes and reactions
 
@@ -40,49 +42,49 @@ for i = 1:length(inorganicMets)
     end
 end
 
-
-
 %All non-carbon metabolites
 nonCarbonMets = model.mets(find(~findregexp(model.metFormulas, 'C\w[^a-z]',1)));
 
 %I THINK THIS PART IS THE PROBLEM. IT REMOVES BIOMASS PERMANENTLY FROM THE
 %MODEL, BUT I'M NOT SURE IT HAS TO AT THIS STAGE
+%WHAT PROBLEM IS THERE EXACTLY? WHY WOULD REMOVING BIOMASS CAUSE A PROBLEM?
 % Remove the biomass reaction for pathway calculation
 fluxesRed = fluxes;
+modelNoBM = model;
 if exist('biomassInd', 'var')
-    model = removeRxns(model, model.rxns(biomassInd));
+    modelNoBM = removeRxns(model, model.rxns(biomassInd));
     fluxesRed(biomassInd)=[];
 end
 
 %% Check which metabolites are part of flux-carrying reactions
 
 %Flux-carrying reactions and S matrix
-rxnIndsActive = find(abs(fluxesRed)>10^-6);
-modelMets.rxnsActive = model.rxns(rxnIndsActive);
-modelMets.rxnsInactive = model.rxns(find(abs(fluxesRed)<=10^-6));
-sActiveTemp = model.S(:,rxnIndsActive);
+rxnIndsActive = find(abs(fluxesRed)>tolFlux);
+structActive.rxnsActive = modelNoBM.rxns(rxnIndsActive);
+structActive.rxnsInactive = modelNoBM.rxns(find(abs(fluxesRed)<=tolFlux));
+sActiveTemp = modelNoBM.S(:,rxnIndsActive);
 
 %Metabolites in flux-carrying reactions
 metIndsActive = find(logical(sum(abs(sActiveTemp),2)));
 
 %Restrict to carbon-carrying metabolites
-metsCarbon = find(findregexp(model.metFormulas, 'C\w[^a-z]',1));
+metsCarbon = find(findregexp(modelNoBM.metFormulas, 'C\w[^a-z]',1));
 
 %Add in any additional inorganic mets to be used
-usedMets = [metsCarbon; find(ismember(model.mets, inorganicMetsComp))];
+usedMets = [metsCarbon; find(ismember(modelNoBM.mets, inorganicMetsComp))];
 
 %Find subset of active metabolites that are also carbon containing or on
 %the intended inorganic list
-modelMets.metIndsActive = intersect(usedMets,metIndsActive);
-modelMets.metsActive= model.mets(modelMets.metIndsActive);
-modelMets.metNames = modelMets.metsActive;
+structActive.metIndsActive = intersect(usedMets,metIndsActive);
+structActive.metsActive= modelNoBM.mets(structActive.metIndsActive);
+structActive.metNames = structActive.metsActive;
 
 %Resulting S matrix and fluxes from reaction and metabolite restrictions
-sActiveIn = model.S(modelMets.metIndsActive,rxnIndsActive);
-modelMets.fluxesActive = fluxesRed(rxnIndsActive);
-fluxSigns = sign(modelMets.fluxesActive);
+sActiveIn = model.S(structActive.metIndsActive,rxnIndsActive);
+structActive.fluxesActive = fluxesRed(rxnIndsActive);
+fluxSigns = sign(structActive.fluxesActive);
 
 %Directional S matrix such that all reactions are proceeding in the forward
 %direction
-modelMets.sActiveDemandDir = bsxfun(@times,sActiveIn',fluxSigns)';
+structActive.sActiveDemandDir = bsxfun(@times,sActiveIn',fluxSigns)';
 

@@ -36,12 +36,10 @@ probDeg = zeros(length(modelMets.metIndsActive),1);
 wb = waitbar(0,'init'); 
 
 for i = 1:length(modelMets.metIndsActive)
-    
     waitbar(i / length(modelMets.metIndsActive),wb, ['Pathways extracted: ', num2str(i), '/',num2str(length(modelMets.metIndsActive))]) 
     curMet = modelMets.metsActive{i};
 
     % Reverse direction, production distance
-
     if ~isempty(find(strcmp(curMet,metsCurCofInorg.currencyPairsComp(:)), 1))
         % It's currency, use the S with inorganic removed
         curDist = distanceDirectional(s.sNoIno, i, cutoffDistance, 0);
@@ -55,7 +53,7 @@ for i = 1:length(modelMets.metIndsActive)
         % It's something else, use S with currency, cofactors and  inorganic mets removed
         curDist = distanceDirectional(s.sNoCurNoCofNoIno, i, cutoffDistance, 0);
     end
-    curRxnIndsActive = find(curDist>-1);
+    curRxnIndsActive = find(curDist>-1)
     if length(curRxnIndsActive)~=length(curDist)
         rxnsToRemove = union(modelMets.rxnsActive(curDist==-1),modelMets.rxnsInactive);
         modelRed = removeRxns(model,rxnsToRemove,false,false);
@@ -65,6 +63,9 @@ for i = 1:length(modelMets.metIndsActive)
     end
     
     
+    %I THINK IT BREAKS BECAUSE IT'S THE ONLY REACTION AND ALSO IT ALREADY
+    %EXISTS
+    
     % Calculate the reduced model imbalances
     curFluxes = modelMets.fluxesActive(curRxnIndsActive);
     curBalances = modelRed.S*curFluxes;
@@ -72,9 +73,10 @@ for i = 1:length(modelMets.metIndsActive)
     curMetIndsUnbalanced = find(curBalances);
     for j = 1:length(curMetIndsUnbalanced)
         curMetDemand = modelRed.mets{curMetIndsUnbalanced(j)};
-        modelRed = addReactionNoDup(modelRed,['DM_' curMetDemand],{curMetDemand},1,1,-1000,1000,0,{},{},{},{},false);
-        curFluxes = [curFluxes;-curBalances(curMetIndsUnbalanced(j))];
-
+        if ~isempty(modelRed.rxns)
+            modelRed = addReactionNoDup(modelRed,['DM_' curMetDemand '_balance'],{curMetDemand},1,1,-1000,1000,0,{},{},{},{},false);
+            curFluxes = [curFluxes;-curBalances(curMetIndsUnbalanced(j))];
+        end
     end
     % Check that the model and flux are now balanced
 %     max(abs(modelRed.S*curFluxes));
