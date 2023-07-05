@@ -62,14 +62,25 @@ for i = 1:length(structActive.metIndsActive)
     end
     
     % add subsystem info
-    if ~isempty(curCell)
-        tmp_curSS = model.subSystems(match(curCell, model.rxns));
-        if ~isempty(tmp_curSS)
-            pSS(i,1) = cell2string(tmp_curSS);
-        end
+%     if ~isempty(curCell)
+      tmp_curSS = model.subSystems(match(curCell, model.rxns));
+%     if ~isempty(tmp_curSS)
+      pSS(i,1) = cell2string(tmp_curSS);
+%     end
+%     end
+    
+    % levels
+    ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
+    
+    try
+        levels = strsplit(calcPaths.levelsProd{i}, ';');
+    catch
+        levels = split(calcPaths.levelsProd(i), ';');    
     end
     
-
+    Plevels(i) = cell2string(levels(ind));
+    
+    
     %% deg
     curPathDeg = calcPaths.pathwaysDeg(i,:);
     curRxnsActive = model.rxns(find(curPathDeg));
@@ -107,16 +118,26 @@ for i = 1:length(structActive.metIndsActive)
     wDegString{i} = curString;
     
     % subsystem info
-    if ~isempty(curCell)
-        tmp_curSS = model.subSystems(match(curCell, model.rxns));
-        if ~isempty(tmp_curSS)
+%     if ~isempty(curCell)
+%         tmp_curSS = model.subSystems(match(curCell, model.rxns));
+%         if ~isempty(tmp_curSS)
             dSS(i,1) = cell2string(tmp_curSS);  
-        end
+%         end
+%     end
+    
+        % levels
+    ind = match(curRxnsMap, curRxnsActive(~findregexp(curRxnsActive,'^DM_',1)));
+    try
+        levels = strsplit(calcPaths.levelsDeg{i}, ';');
+    catch
+        levels = split(calcPaths.levelsDeg(i), ';');
     end
+    Dlevels(i) = cell2string(levels(ind));
     
 end
 
-
+cRes.pLevel = Plevels';
+cRes.dLevel = Dlevels';
 cRes.pProdString = pProdString;
 cRes.wProdString = wProdString;
 cRes.scoresProd = scoresProd;

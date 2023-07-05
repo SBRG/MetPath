@@ -50,8 +50,6 @@ load('data\curCofPairs');
 % currencyPairs = {};
 
 
-
-
 %% Case 1: Calculating pathways de novo
 
 % For the anaerobic condition, convert the model to be handled by the toolbox, 
@@ -88,14 +86,6 @@ fluxes = calculateFluxState(modelAnaAdj, tolFlux);
 [modelAnaAdjNoBM, structActiveAna, nonCarbonMets, fluxesRed] = getActiveNetwork(modelAnaAdj,...
     biomassInd, fluxes, inorganicMets, compartments, tolFlux);
 
-%DUE TO TRUNCATING FLUXES, THERE COULD BE METABOLITES THAT ARE DISCONNECTED
-%FROM THE REST OF THE NETWORK
-
-%BIOMASS IS NOW REMOVED - NEED TO MAKE SURE DONT NEED TO RECALCULATE FLUX NOW
-
-%I DON'T UNDERSTAND HOW modelMetsAna CONTAINS THAT METABOLITE - IT DOESN'T
-%CONNECT TO ANYTHING IT SAYS - IS THIS A PROBLEM IN GETACTIVENETWORK?
-
 %Organize Gene-Protein-Reaction (GPRs) for data mapping purposes
 [parsedGPR,corrRxn] = extractGPRs(modelAnaAdjNoBM);
 
@@ -119,14 +109,18 @@ pathsAna = metPath(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg, sPruned, c
 %p-value
 %cRes =  vector used to generate resultsTab, useful for other functions
 numPerms = 100;
+for i = 9:332 %Filling in blank subsystems
+    modelAna.subSystems{i} = 'Extracellular exchange';
+end
 cResAna = calcRes(modelAnaAdjNoBM, structActiveAna, fMapAna, pathsAna, numPerms);
 
 %Collecting the results
 %   resultsTab = a cell array that could be sorted
+
 resultsTab = createResultsTab(structActiveAna, cResAna);
 
 
-% NOTE: the cutoff distance is set to 1 in order to run the tutorial
+% NOTE: cutoffDistance can be set to 1 in order to run the tutorial
 % faster. For each metabolite extract the reactions involved in the
 % production and in its degradation, estimate their weightings and their
 % levels. The levels are meant as the distance from the reaction directly
@@ -150,10 +144,6 @@ aggregatePerturbationScoresAna = calcAggregateScores(structActiveAna, cResAna);
 
 %% Case 2:
 
-%MAKE THIS SECTION INTERACT BETTER - IT'S NOT ACTUALLY A SECOND SET OF
-%ANALYSES, IT'S A SECOND CONDITION WHICH WE THEN COMPARE
-
-
 % In order to retrieve the subSystems perturbation score it is necessary
 % compare the scores of the two differents conditions. Thus, what was done
 % for the anaerobic growing conditions has to be done also for the aerobic
@@ -163,16 +153,16 @@ modelStdAdj = convertModel(modelStd);
 tolFlux = 10^-6; 
 fluxesStd = calculateFluxState(modelStdAdj, tolFlux);
 [modelStdAdjNoBM, modelMetsStd, nonCarbonMets, fluxesRed] = getActiveNetwork(modelStdAdj,...
-    biomassInd, fluxesStd, inorganicMets, compartments);
+    biomassInd, fluxesStd, inorganicMets, compartments, tolFlux);
 [parsedGPR,corrRxn] = extractGPRs(modelStdAdjNoBM);
 fMapStd = mapGenes(modelStdAdjNoBM, parsedGPR,corrRxn, exprData.genes, ... 
     exprData.anaerobic, exprData.aerobic);
 cutoffDistance = 1;
 cutoffFraction = 0.00;
 
-pathsStd = metPath(modelStdAdjNoBM, modelMetsStd, metsCurCofInorg, cutoffDistance,cutoffFraction);
+%metsCurCofInorgsPruned
+pathsStd = metPath(modelStdAdjNoBM, modelMetsStd, metsCurCofInorg, sPruned, cutoffDistance, cutoffFraction);
 cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
-
 
 %% Compare the two states %CHANGE THIS NAME
 % Then we can score the subSystems Perturbation with:
@@ -186,7 +176,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActive
 [commonPaths, diffPaths] = comparePaths(modelAnaAdjNoBM,modelStdAdjNoBM,...
     cResAna,cResStd, structActiveAna,modelMetsStd);
 
-% % NOTE: in this case, since we extracted paths using a distance = 1 they
+% % NOTE: in this case, if we extracted paths using a distance = 1 they
 % will result exactly the same except for the perturbation score.
 
 

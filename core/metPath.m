@@ -1,4 +1,4 @@
-function [paths,srttime,fnstime] = metPath(model, modelMets, metsCurCofInorg, s, cutoffDistance, cutoffFraction)
+function [paths,srttime,fnstime] = metPath(model, modelMets, metsCurCofInorg, sMatrix, cutoffDistance, cutoffFraction)
 
 % For each metabolite extract the reactions involved in the production and 
 % its degradation, estimate their weightings and their levels. The levels are
@@ -42,16 +42,16 @@ for i = 1:length(modelMets.metIndsActive)
     % Reverse direction, production distance
     if ~isempty(find(strcmp(curMet,metsCurCofInorg.currencyPairsComp(:)), 1))
         % It's currency, use the S with inorganic removed
-        curDist = distanceDirectional(s.sNoIno, i, cutoffDistance, 0);
+        curDist = distanceDirectional(sMatrix.sNoIno, i, cutoffDistance, 0);
     elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.cofactorPairsComp(:)), 1))
         % It's a cofactor, use the S with currency and inorganic mets removed
-        curDist = distanceDirectional(s.sNoCurNoIno, i, cutoffDistance, 0);
+        curDist = distanceDirectional(sMatrix.sNoCurNoIno, i, cutoffDistance, 0);
     elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.inorganicMetsComp(:)), 1))
         % It's a inorganic met, use the full S
         curDist = distanceDirectional(modelMets.sActiveDemandDir, i, cutoffDistance, 0);
     else
         % It's something else, use S with currency, cofactors and  inorganic mets removed
-        curDist = distanceDirectional(s.sNoCurNoCofNoIno, i, cutoffDistance, 0);
+        curDist = distanceDirectional(sMatrix.sNoCurNoCofNoIno, i, cutoffDistance, 0);
     end
     curRxnIndsActive = find(curDist>-1)
     if length(curRxnIndsActive)~=length(curDist)
@@ -110,21 +110,32 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
   
+    % adding distance information: distance measurement start from 0
     
+    ind = match(model.rxns(find(pathwaysProd(i,:))), modelMets.rxnsActive(curRxnIndsActive));
+    selectedDist = curDist(find(curDist>-1));
+    selectedDist = selectedDist(ind);
+    
+    if ~isempty(selectedDist)
+        selectedDist = num2str(selectedDist);
+        levelsProd(i) = cell2string(selectedDist);
+    else
+        levelsProd(i) = {''};
+    end
     
     % Forward direction, degradation distance
     if ~isempty(find(strcmp(curMet,metsCurCofInorg.currencyPairsComp(:)), 1))
         % It's currency, use the full S
-        curDist = distanceDirectional(s.sNoIno, i, cutoffDistance, 1);
+        curDist = distanceDirectional(sMatrix.sNoIno, i, cutoffDistance, 1);
     elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.cofactorPairsComp(:)), 1))
         % It's a cofactor, use the S with currency and inorganic mets removed
-        curDist = distanceDirectional(s.sNoCurNoIno, i, cutoffDistance, 1);
+        curDist = distanceDirectional(sMatrix.sNoCurNoIno, i, cutoffDistance, 1);
     elseif ~isempty(find(strcmp(curMet,metsCurCofInorg.inorganicMetsComp(:)), 1))
         % It's a inorganic met, use the full S
         curDist = distanceDirectional(modelMets.sActiveDemandDir, i, cutoffDistance, 1);
     else
         % It's something else, use S with currency, cofactors and  inorganic mets removed
-        curDist = distanceDirectional(s.sNoCurNoCofNoIno, i, cutoffDistance, 1);
+        curDist = distanceDirectional(sMatrix.sNoCurNoCofNoIno, i, cutoffDistance, 1);
     end
 
     curRxnIndsActive = find(curDist>-1);
@@ -177,6 +188,18 @@ for i = 1:length(modelMets.metIndsActive)
         end
     end
 
+        % adding distance information: distance measurement start from 0
+
+    ind = match(model.rxns(find(pathwaysDeg(i,:))), modelMets.rxnsActive(curRxnIndsActive));
+    selectedDist = curDist(find(curDist>-1));
+    selectedDist = selectedDist(ind);
+    
+    if ~isempty(selectedDist)
+        selectedDist = num2str(selectedDist);
+        levelsDeg(i) = cell2string(selectedDist);
+    else
+        levelsDeg(i) = {''};
+    end
    
 end
 
@@ -185,7 +208,8 @@ fnstime = clock;
 fnstime = [fnstime(4) fnstime(5)] ;
 display([ 'ended at:' ' ' num2str(fnstime(1)) ':' num2str(fnstime(2)) ])
 
-
+paths.levelsDeg = levelsDeg;
+paths.levelsProd = levelsProd;
 paths.pathwaysDeg = pathwaysDeg;
 paths.pathwaysProd = pathwaysProd;
 
