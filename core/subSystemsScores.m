@@ -1,4 +1,4 @@
-function subSystemsPerturbation = subSystemsScores(model, cRes, modelMets,model2, cRes2, modelMets2)
+function subSystemsPerturbation = subSystemsScores(model, cRes, modelMets,paths1, model2, cRes2, modelMets2,paths2)
 
 
 % this function permit by means of perturbation score which are the most
@@ -22,8 +22,8 @@ for i=1:numel(paths)
 % counting the subSyst.
 
     curInd = ismember(modelMets.metNames, paths(i));
-    curProd = model.rxns(find(cRes.pathwaysProd(curInd,:)));
-    curDeg = model.rxns(find(cRes.pathwaysDeg(curInd,:)));
+    curProd = model.rxns(find(paths1.pathwaysProd(curInd,:)));
+    curDeg = model.rxns(find(paths1.pathwaysDeg(curInd,:)));
     curRxnsAct = unique([curProd; curDeg]); 
     curRxnsAct = intersect(curRxnsAct, modelMets.rxnsActive);
     curSubSystems = model.subSystems(match(curRxnsAct, model.rxns)); 
@@ -108,8 +108,8 @@ if exist('model2', 'var')
     %   counting the subSyst.
 
         curInd = ismember(modelMets.metNames, paths(i));
-        curProd = model.rxns(find(cRes2.pathwaysProd(curInd,:)));
-        curDeg = model.rxns(find(cRes2.pathwaysDeg(curInd,:)));
+        curProd = model.rxns(find(paths2.pathwaysProd(curInd,:)));
+        curDeg = model.rxns(find(paths2.pathwaysDeg(curInd,:)));
         curRxnsAct = unique([curProd; curDeg]); 
         curRxnsAct = intersect(curRxnsAct, modelMets.rxnsActive);
         curSubSystems = model.subSystems(match(curRxnsAct, model.rxns)); 

@@ -99,7 +99,7 @@ sPruned = pruneMatrices(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg);
 
 %Extract the pathways and calculate the production scores, degradation
 %scores and the aggregate perturbation scores
-cutoffDistance = 3;
+cutoffDistance = 1;
 cutoffFraction = 0.05;
 
 %Pathway calculation
@@ -164,9 +164,9 @@ cutoffFraction = 0.00;
 pathsStd = metPath(modelStdAdjNoBM, modelMetsStd, metsCurCofInorg, sPruned, cutoffDistance, cutoffFraction);
 cResStd = calcRes(modelStdAdjNoBM, modelMetsStd, fMapStd, pathsStd, numPerms);
 
-%% Compare the two states %CHANGE THIS NAME
+%% Compare the two states
 % Then we can score the subSystems Perturbation with:
-subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActiveAna,modelStd, cResStd, modelMetsStd);
+subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActiveAna,pathsAna, modelStd, cResStd, modelMetsStd, pathsStd);
 
 % this function will calculate the overall perturbation of the subSystems in the model
 
@@ -174,7 +174,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActive
 % used rxns we can use the comparePaths function:
 
 [commonPaths, diffPaths] = comparePaths(modelAnaAdjNoBM,modelStdAdjNoBM,...
-    cResAna,cResStd, structActiveAna,modelMetsStd);
+    cResAna,cResStd, structActiveAna,modelMetsStd, pathsAna, pathsStd);
 
 % % NOTE: in this case, if we extracted paths using a distance = 1 they
 % will result exactly the same except for the perturbation score.
@@ -184,7 +184,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActive
 % (in production reactions, degradation reactions and in th whole path)
 
 
-[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaAdjNoBM, structActiveAna);
+[Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cResAna, modelAnaAdjNoBM, structActiveAna,pathsAna);
 
 
 

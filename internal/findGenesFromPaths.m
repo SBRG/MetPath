@@ -1,10 +1,10 @@
-function [Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cRes, model, modelMets)
+function [Pgenes, Dgenes, PDgenes] = findGenesFromPaths(cRes, model, modelMets,paths)
 
 
 % find involved genes in paths from genes-reactions matrix
 
-for i = 1:size(cRes.pathwaysDeg,1)
-    Drxns = intersect(modelMets.rxnsActive,model.rxns(find(cRes.pathwaysDeg(i,:))));
+for i = 1:size(paths.pathwaysDeg,1)
+    Drxns = intersect(modelMets.rxnsActive,model.rxns(find(paths.pathwaysDeg(i,:))));
     if ~isempty(Drxns)
         genes = findGenesFromRxns(model, Drxns);
         geneslist={};
@@ -27,8 +27,8 @@ end
 
 
 
-for i = 1:size(cRes.pathwaysProd,1)
-    Prxns = intersect(modelMets.rxnsActive,model.rxns(find(cRes.pathwaysProd(i,:))));
+for i = 1:size(paths.pathwaysProd,1)
+    Prxns = intersect(modelMets.rxnsActive,model.rxns(find(paths.pathwaysProd(i,:))));
     if ~isempty(Prxns)
         genes = findGenesFromRxns(model, Prxns);
         geneslist={};
@@ -48,7 +48,7 @@ for i = 1:size(cRes.pathwaysProd,1)
     
 end
 
-for i = 1:size(cRes.pathwaysProd,1)
+for i = 1:size(paths.pathwaysProd,1)
     PDgenes{i} = [Pgenes{i}; Dgenes{i}]';
 end
 end

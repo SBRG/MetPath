@@ -1,4 +1,4 @@
-function [common, diffPaths] = comparePaths(model1,model2, cRes1,cRes2, modelMets1,modelMets2)
+function [common, diffPaths] = comparePaths(model1,model2, cRes1,cRes2, modelMets1,modelMets2, paths1, paths2)
 
 aggregatePerturbationScore1 = calcAggregateScores(modelMets1,cRes1);
 aggregatePerturbationScore2 = calcAggregateScores(modelMets2,cRes2);
@@ -17,8 +17,8 @@ vals2 = cell2mat(aggregatePerturbationScore2(:,4));
 
 % first condition
 for i = 1:numel(indDiff1)
-    exclusiveRxnPaths1{i,1} = intersect(modelMets1.rxnsActive, model1.rxns(find(cRes1.pathwaysProd(indDiff1(i),:)))); %%
-    exclusiveRxnPaths1{i,1} = [exclusiveRxnPaths1{i,1}; intersect(modelMets1.rxnsActive, model1.rxns(find(cRes1.pathwaysDeg(indDiff1(i),:))))]; %%
+    exclusiveRxnPaths1{i,1} = intersect(modelMets1.rxnsActive, model1.rxns(find(paths1.pathwaysProd(indDiff1(i),:)))); %%
+    exclusiveRxnPaths1{i,1} = [exclusiveRxnPaths1{i,1}; intersect(modelMets1.rxnsActive, model1.rxns(find(paths1.pathwaysDeg(indDiff1(i),:))))]; %%
     valInd = ismember(aggregatePerturbationScore1(:,1),diff1(i));
     exclusiveRxnPaths1Scores(i,1) = vals1(valInd);
     exclusiveRxnPaths1str(i,1) = append(exclusiveRxnPaths1{i});
@@ -26,8 +26,8 @@ end
 
 % second condition
 for i = 1:numel(indDiff2)
-    exclusiveRxnPaths2{i,1} = intersect(modelMets2.rxnsActive, model2.rxns(find(cRes2.pathwaysProd(indDiff2(i),:)))); %%
-    exclusiveRxnPaths2{i,1} = [exclusiveRxnPaths2{i,1}; intersect(modelMets2.rxnsActive, model2.rxns(find(cRes2.pathwaysDeg(indDiff2(i),:))))]; %%
+    exclusiveRxnPaths2{i,1} = intersect(modelMets2.rxnsActive, model2.rxns(find(paths2.pathwaysProd(indDiff2(i),:)))); %%
+    exclusiveRxnPaths2{i,1} = [exclusiveRxnPaths2{i,1}; intersect(modelMets2.rxnsActive, model2.rxns(find(paths2.pathwaysDeg(indDiff2(i),:))))]; %%
     valInd = ismember(aggregatePerturbationScore2(:,1),diff2(i));
     exclusiveRxnPaths2Scores(i,1) = vals2(valInd);
     exclusiveRxnPaths2str(i,1) = append(exclusiveRxnPaths2{i});
@@ -69,8 +69,8 @@ end
 
 % first condition
 for i = 1:numel(indCommon1)
-    commonPathRxns1{i,1} = model1.rxns(find(cRes1.pathwaysProd(indCommon1(i),:)));
-    commonPathRxns1{i,1} = [commonPathRxns1{i,1}; model1.rxns(find(cRes1.pathwaysDeg(indCommon1(i),:)))];
+    commonPathRxns1{i,1} = model1.rxns(find(paths1.pathwaysProd(indCommon1(i),:)));
+    commonPathRxns1{i,1} = [commonPathRxns1{i,1}; model1.rxns(find(paths1.pathwaysDeg(indCommon1(i),:)))];
 
     % filtering out the inactive rxns
     commonPathRxns1{i,1} = intersect(commonPathRxns1{i,1}, modelMets1.rxnsActive);
@@ -79,8 +79,8 @@ end
 
 % second condition
 for i = 1:numel(indCommon2)
-    commonPathRxns2{i,1} = model2.rxns(find(cRes2.pathwaysProd(indCommon2(i),:)));
-    commonPathRxns2{i,1} = [commonPathRxns2{i,1}; model2.rxns(find(cRes2.pathwaysDeg(indCommon2(i),:)))];
+    commonPathRxns2{i,1} = model2.rxns(find(paths2.pathwaysProd(indCommon2(i),:)));
+    commonPathRxns2{i,1} = [commonPathRxns2{i,1}; model2.rxns(find(paths2.pathwaysDeg(indCommon2(i),:)))];
 
     % filtering out the inactive rxns
     commonPathRxns2{i,1} = intersect(commonPathRxns2{i,1}, modelMets2.rxnsActive);
@@ -128,11 +128,18 @@ end
 % scoring the fc
 
 for i =1:numel(commonPathRxns1)
-    commonRxnsScrFc(i,1) = abs(log(commonRxnsScr2(i,1)./commonRxnsScr1(i,1))); %?
-    exclusiveRxns1Scorestr(i,1) = num2cell(commonRxnsScr1(i,1));
-    exclusiveRxns2Scorestr(i,1) = num2cell(commonRxnsScr2(i,1));
-    commonRxnsSortedstr(i,1) = append(commonRxns{i});
-    commonFlxsFcSortedstr(i,1) = append(commonRxnsScrFc(i,1));
+    commonRxnsScrFc(i,1) = abs(log(commonRxnsScr2(i,1)./commonRxnsScr1(i,1))); 
+    if ~isnan(commonRxnsScrFc(i,1))
+        exclusiveRxns1Scorestr(i,1) = num2cell(commonRxnsScr1(i,1));
+        exclusiveRxns2Scorestr(i,1) = num2cell(commonRxnsScr2(i,1));
+        commonRxnsSortedstr(i,1) = append(commonRxns{i});
+        commonFlxsFcSortedstr(i,1) = append(num2str(commonRxnsScrFc(i,1)));
+    else
+        exclusiveRxns1Scorestr(i,1) = {['0']};
+        exclusiveRxns2Scorestr(i,1) = {['0']};
+        commonRxnsSortedstr(i,1) = append('');
+        commonFlxsFcSortedstr(i,1) = append('');
+    end
 end
 
 
