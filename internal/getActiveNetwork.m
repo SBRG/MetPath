@@ -45,9 +45,6 @@ end
 %All non-carbon metabolites
 nonCarbonMets = model.mets(find(~findregexp(model.metFormulas, 'C\w[^a-z]',1)));
 
-%I THINK THIS PART IS THE PROBLEM. IT REMOVES BIOMASS PERMANENTLY FROM THE
-%MODEL, BUT I'M NOT SURE IT HAS TO AT THIS STAGE
-%WHAT PROBLEM IS THERE EXACTLY? WHY WOULD REMOVING BIOMASS CAUSE A PROBLEM?
 % Remove the biomass reaction for pathway calculation
 fluxesRed = fluxes;
 modelNoBM = model;
