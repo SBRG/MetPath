@@ -18,7 +18,7 @@ clear all
 changeCobraSolver('gurobi','LP');
 changeCobraSolver('gurobi','QP');
 changeCobraSolver('gurobi','MILP');
-changeCobraSolver('gurobi','MIQP')
+changeCobraSolver('gurobi','MIQP');
 
 %% Set current directory
 
@@ -99,8 +99,8 @@ sPruned = pruneMatrices(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg);
 
 %Extract the pathways and calculate the production scores, degradation
 %scores and the aggregate perturbation scores
-cutoffDistance = 1;
-cutoffFraction = 0.05;
+cutoffDistance = 3;
+cutoffFraction = 0.1;
 
 %Pathway calculation
 pathsAna = metPath(modelAnaAdjNoBM, structActiveAna, metsCurCofInorg, sPruned, cutoffDistance,cutoffFraction);
@@ -173,7 +173,7 @@ subSystemsPerturbation = subSystemsScores(modelAnaAdjNoBM, cResAna, structActive
 % to generate a table with a comparisons in terms of perturbation score and
 % used rxns we can use the comparePaths function:
 
-[commonPaths, diffPaths] = comparePaths(modelAnaAdjNoBM,modelStdAdjNoBM,...
+[commonPaths, diffPaths] = comparePathways(modelAnaAdjNoBM,modelStdAdjNoBM,...
     cResAna,cResStd, structActiveAna,modelMetsStd, pathsAna, pathsStd);
 
 % % NOTE: in this case, if we extracted paths using a distance = 1 they

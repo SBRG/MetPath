@@ -1,5 +1,13 @@
 function [paths,srttime,fnstime] = metPath(model, modelMets, metsCurCofInorg, sMatrix, cutoffDistance, cutoffFraction)
 
+% model = modelAnaAdjNoBM;
+% modelMets = structActiveAna;
+% metsCurCofInorg;
+% sMatrix = sPruned;
+% cutoffDistance;
+% cutoffFraction;
+
+
 % For each metabolite extract the reactions involved in the production and 
 % its degradation, estimate their weightings and their levels. The levels are
 % meant as the distance from the reaction directly involved in the production
@@ -36,6 +44,7 @@ probDeg = zeros(length(modelMets.metIndsActive),1);
 wb = waitbar(0,'init'); 
 
 for i = 1:length(modelMets.metIndsActive)
+% for i = 6
     waitbar(i / length(modelMets.metIndsActive),wb, ['Pathways extracted: ', num2str(i), '/',num2str(length(modelMets.metIndsActive))]) 
     curMet = modelMets.metsActive{i};
 
@@ -53,7 +62,7 @@ for i = 1:length(modelMets.metIndsActive)
         % It's something else, use S with currency, cofactors and  inorganic mets removed
         curDist = distanceDirectional(sMatrix.sNoCurNoCofNoIno, i, cutoffDistance, 0);
     end
-    curRxnIndsActive = find(curDist>-1)
+    curRxnIndsActive = find(curDist>-1);
     if length(curRxnIndsActive)~=length(curDist)
         rxnsToRemove = union(modelMets.rxnsActive(curDist==-1),modelMets.rxnsInactive);
         modelRed = removeRxns(model,rxnsToRemove,false,false);
@@ -61,10 +70,6 @@ for i = 1:length(modelMets.metIndsActive)
         rxnsToRemove = modelMets.rxnsInactive;
         modelRed = removeRxns(model,rxnsToRemove,false,false);
     end
-    
-    
-    %I THINK IT BREAKS BECAUSE IT'S THE ONLY REACTION AND ALSO IT ALREADY
-    %EXISTS
     
     % Calculate the reduced model imbalances
     curFluxes = modelMets.fluxesActive(curRxnIndsActive);
@@ -85,14 +90,14 @@ for i = 1:length(modelMets.metIndsActive)
     try
         [P,w] = em_decomp(curFluxes,modelRed);
         % Use weightings to filter out tiny values
-        curDemandName = ['DM_' curMet];
+        curDemandName = ['DM_' curMet '_balance'];
         % finding where the P matrix has no demand reaction
         rxnNameInd = strcmp(curDemandName,modelRed.rxns);
         pDemand = find(P(rxnNameInd,:)~=0);
         pWeighted = bsxfun(@times,P(:,pDemand)',w(pDemand)')';
         pSummed = sum(pWeighted,2);
-        % Remove components of pSummed that are not at least "cutoffFraction" of the total
-        pSummed(abs((pSummed/sum(abs(pSummed))))<cutoffFraction) = 0;
+        % Remove components of pSummed that are not at least "cutoffFraction" of the max
+        pSummed(abs((pSummed/max(abs(pSummed))))<cutoffFraction) = 0;
         % Now map this back to the dimensions of model
         for j = 1:length(modelRed.rxns)
             curRxnIndMap = find(strcmp(modelRed.rxns{j},model.rxns));
@@ -162,15 +167,15 @@ for i = 1:length(modelMets.metIndsActive)
     % Calculate elementary modes
     try
         [P,w] = em_decomp(curFluxes,modelRed);
-        % Use weightings to filter out tiny values        
-        curDemandName = ['DM_' curMet];
+        % Use weightings to filter out tiny values
+        curDemandName = ['DM_' curMet '_balance'];
         % finding where the P matrix has no demand reaction
         rxnNameInd = strcmp(curDemandName,modelRed.rxns);
         pDemand = find(P(rxnNameInd,:)~=0);
         pWeighted = bsxfun(@times,P(:,pDemand)',w(pDemand)')';
         pSummed = sum(pWeighted,2);
-        % Remove components of pSummed that are not at least 5% of the total
-        pSummed(abs((pSummed/sum(abs(pSummed))))<cutoffFraction) = 0;
+        % Remove components of pSummed that are not at least "cutoffFraction" of the max
+        pSummed(abs((pSummed/max(abs(pSummed))))<cutoffFraction) = 0;
         % Now map this back to the dimensions of model
         for j = 1:length(modelRed.rxns)
             curRxnIndMap = find(strcmp(modelRed.rxns{j},model.rxns));

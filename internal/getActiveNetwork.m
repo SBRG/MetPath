@@ -77,7 +77,7 @@ structActive.metsActive= modelNoBM.mets(structActive.metIndsActive);
 structActive.metNames = structActive.metsActive;
 
 %Resulting S matrix and fluxes from reaction and metabolite restrictions
-sActiveIn = model.S(structActive.metIndsActive,rxnIndsActive);
+sActiveIn = modelNoBM.S(structActive.metIndsActive,rxnIndsActive);
 structActive.fluxesActive = fluxesRed(rxnIndsActive);
 fluxSigns = sign(structActive.fluxesActive);
 
